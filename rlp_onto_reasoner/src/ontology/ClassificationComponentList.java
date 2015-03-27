@@ -1,6 +1,5 @@
 package ontology;
 
-
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -16,29 +15,18 @@ import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
 
-
-
-
-import raster.Raster;
-
-
 public class ClassificationComponentList<ClassifiactionComponentOwlAPI> {
 	
 	public HashMap<Number, ArrayList<String>> attributes;
 	public ArrayList<String> superAttributes;
 	public String database;
 ;
-	
-	
 
 	public Collection<ClassificationComponentOwlAPI> getClassificationComponentList(String region, IRI regionIRI, OWLReasoner reasoner, OWLOntologyManager manager) throws SQLException{
 			
-
 		Collection<ClassificationComponentOwlAPI> classificationComponents = new LinkedList<ClassificationComponentOwlAPI>();
 		dataBase.PostGIS_Database database = new dataBase.PostGIS_Database();
 		ResultSet rs =database.loadAttributes(region);
-			
-			
 			
 		while(rs.next()){
 			//System.out.println(rs.getString("primitiveName").trim());
@@ -53,19 +41,13 @@ public class ClassificationComponentList<ClassifiactionComponentOwlAPI> {
 				//clComp.superClasses();
 				//clComp.superClassesString();
 			classificationComponents.add(clComp);
-				
-				
 		}
 			
-			
-			
 		return classificationComponents;
-		
 	}
 		public static void main(String[] args) throws SQLException {
 			//ClassificationComponentList cCL = new ClassificationComponentList();
 			//Collection<ClassificationComponentOwlAPI> classCompList = cCL.getClassificationComponentList("Flandern", null, null, null);
 			//System.out.println(classCompList);
 		}
-
 }

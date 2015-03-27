@@ -1,6 +1,5 @@
 package ontology;
 
-
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.reasoner.ConsoleProgressMonitor;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
@@ -9,22 +8,13 @@ import org.semanticweb.owlapi.reasoner.OWLReasonerFactory;
 import org.semanticweb.owlapi.reasoner.SimpleConfiguration;
 import org.semanticweb.HermiT.Reasoner;
 
-
-
-
-
 public class ReasonerHermit{
-
-	
 
 	/**
 	 * @param args
 	 */
 	
-	
 	OWLReasoner reasoner;
-
-	
 	
 	public static OWLReasoner createOWLReasoner(OWLOntology ont){
 
@@ -39,7 +29,6 @@ public class ReasonerHermit{
 		return reasHer.reasoner;
 		
 		}
-	
 	
 	public void checkConsistency(){
 		
@@ -91,10 +80,6 @@ public class ReasonerHermit{
 		return reasoner;
 	}
 	
-	
-	
-	
-	
 	private static ProtegeReasoner createPelletOWLAPIReasoner(OWLModel owlModel) {
 	// Get the reasoner manager and obtain a reasoner for the OWL model. 
 	ReasonerManager reasonerManager = ReasonerManager.getInstance();
@@ -106,7 +91,6 @@ public class ReasonerHermit{
 	
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-
 	}
 */
 }
