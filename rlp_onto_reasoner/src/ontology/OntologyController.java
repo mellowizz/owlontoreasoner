@@ -13,8 +13,6 @@ import org.semanticweb.owlapi.reasoner.OWLReasoner;
 
 public class OntologyController{
 	
-	
-	
 	public Collection<ClassificationComponentOwlAPI> run(String region1, IRI destinationRegionIRI, String region2, IRI originRegionIRI, OWLReasoner reasoner, OWLOntologyManager manager) throws SQLException{
 		
 		@SuppressWarnings("rawtypes")
@@ -24,5 +22,4 @@ public class OntologyController{
 
 		return classCompList;
 	}
-
 }

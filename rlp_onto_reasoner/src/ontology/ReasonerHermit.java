@@ -22,11 +22,12 @@ public class ReasonerHermit{
 		OWLReasonerFactory reasonerFactory = new Reasoner.ReasonerFactory();
 		ConsoleProgressMonitor progressMonitor = new ConsoleProgressMonitor();
 		OWLReasonerConfiguration config = new SimpleConfiguration(progressMonitor);
-
-		reasHer.reasoner = reasonerFactory.createReasoner(ont, config);
-		reasHer.checkConsistency();
+		Reasoner hermit = new Reasoner(ont);
+		//reasHer.reasoner = reasonerFactory.createReasoner(ont, config);
+		//reasHer.checkConsistency();
+		System.out.println(hermit.isConsistent());
 		
-		return reasHer.reasoner;
+		return hermit;//reasHer.reasoner;
 		
 		}
 	
