@@ -35,7 +35,7 @@ public class testReasoner {
 			
 			for (OWLClass c : onto.getClassesInSignature()){
 				// dry_or_seasonally wet=0, periodific_flooding=0?
-				if (c.getIRI().getFragment().equals("riparian")){
+				if (c.getIRI().getFragment().equals("dry_or_seasonally_wet")){
 					//NodeSet<OWLNamedIndividual>instances = hermit.getInstances(c, false);
 					NodeSet<OWLNamedIndividual>instances = factplusplus.getInstances(c, false);
 					System.out.println(c.getIRI().getFragment());
