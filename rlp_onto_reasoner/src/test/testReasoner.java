@@ -2,6 +2,7 @@ package test;
 
 import java.io.File;
 
+import org.semanticweb.owlapi.reasoner.OWLReasoner;
 import org.semanticweb.owlapi.reasoner.OWLReasonerFactory;
 import org.semanticweb.HermiT.Reasoner;
 import org.semanticweb.owlapi.apibinding.OWLManager;
@@ -12,6 +13,7 @@ import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
 import org.semanticweb.owlapi.reasoner.NodeSet;
 
+import uk.ac.manchester.cs.factplusplus.owlapiv3.FaCTPlusPlusReasonerFactory;
 import ontology.ReasonerHermit;
 
 public class testReasoner {
@@ -25,18 +27,22 @@ public class testReasoner {
 		System.out.println("Before try");
 		try{
 			onto = mgr.loadOntologyFromOntologyDocument(file);
-			Reasoner hermit = new Reasoner(onto);
+			//Reasoner hermit = new Reasoner(onto);
 			//OWLReasoner hermit = ReasonerHermit.createOWLReasoner(onto);
-			System.out.println(hermit.getReasonerVersion());
-			
+			OWLReasoner factplusplus = new FaCTPlusPlusReasonerFactory().createReasoner(onto);
+			//System.out.println(hermit.getReasonerVersion());
+			System.out.println(factplusplus.getReasonerVersion());
 			
 			for (OWLClass c : onto.getClassesInSignature()){
-				if (c.getIRI().getFragment().equals("waterlogged")){
-					NodeSet<OWLNamedIndividual>instances = hermit.getInstances(c, false);
+				// dry_or_seasonally wet=0, periodific_flooding=0?
+				if (c.getIRI().getFragment().equals("riparian")){
+					//NodeSet<OWLNamedIndividual>instances = hermit.getInstances(c, false);
+					NodeSet<OWLNamedIndividual>instances = factplusplus.getInstances(c, false);
 					System.out.println(c.getIRI().getFragment());
 					for (OWLNamedIndividual i : instances.getFlattened()) {
 						System.out.println(i.getIRI().getFragment());
 					}
+					System.out.println(instances.getFlattened().size());
 				}
 			}
 		} catch (OWLOntologyCreationException e) {
