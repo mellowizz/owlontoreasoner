@@ -124,12 +124,12 @@ public class testReasoner {
 		System.out.println("Before try");
 		try {
 			onto = mgr.loadOntologyFromOntologyDocument(file);
-			OWLReasoner hermit = new Reasoner.ReasonerFactory().createReasoner(onto);
-			/*OWLReasoner factplusplus = new FaCTPlusPlusReasonerFactory()
-					.createReasoner(onto); */
-			//System.out.println(factplusplus.getReasonerVersion());
-			//factplusplus.precomputeInferences(InferenceType.CLASS_HIERARCHY);
-			System.out.println(hermit.getReasonerVersion());
+			//OWLReasoner hermit = new Reasoner.ReasonerFactory().createReasoner(onto);
+			OWLReasoner factplusplus = new FaCTPlusPlusReasonerFactory()
+					.createReasoner(onto); 
+			System.out.println(factplusplus.getReasonerVersion());
+			factplusplus.precomputeInferences(InferenceType.CLASS_HIERARCHY);
+			//System.out.println(hermit.getReasonerVersion());
 			HashMap<String, ArrayList<String>> classesHash = new HashMap<String, ArrayList<String>>();
 			/*classesHash.put("waterlogged", new ArrayList<String>());
 			classesHash.put("periodic_flooding", new ArrayList<String>());
@@ -157,22 +157,29 @@ public class testReasoner {
 					System.out.println("class list empty!");
 					break;
 				}
-				if (c.getIRI().getFragment().equals(classList.remove(0))) {
-					String currClass = c.getIRI().getFragment();
-					System.out.println("CurrClass:" + currClass);
-					//NodeSet<OWLNamedIndividual> instances = factplusplus
-					//		.getInstances(c, false);
-					NodeSet<OWLNamedIndividual> instances = hermit
+				
+				String currClass = c.getIRI().getFragment();			
+				System.out.println("current class: " + currClass);
+				if (classList.contains(currClass)) {
+					NodeSet<OWLNamedIndividual> instances = factplusplus
 							.getInstances(c, false);
+					System.out.println("current class: " + currClass + " isEmpty? " + instances.isEmpty());
+					/*NodeSet<OWLNamedIndividual> instances = hermit
+							.getInstances(c, false);*/
 					for (OWLNamedIndividual i : instances.getFlattened()) {
-						// classesHash.get(currClass, )
 						classesHash.get(currClass)
 								.add(i.getIRI().getFragment());
-						System.out.println(i.getIRI().getFragment());
+						//System.out.println(i.getIRI().getFragment());
 					}
 					System.out.println("Total: "
 							+ instances.getFlattened().size());
+				} else{
+					continue;
 				}
+			}
+			for (ArrayList<String> clazz: classesHash.values()){
+				System.out.println(clazz.toString());
+				System.out.println("Class size: " + clazz.size());
 			}
 			createTable(classesHash);
 		} catch (OWLOntologyCreationException e) {
