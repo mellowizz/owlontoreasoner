@@ -8,32 +8,33 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.semanticweb.owlapi.reasoner.InferenceType;
-import org.semanticweb.owlapi.reasoner.OWLReasoner;
-import org.semanticweb.owlapi.reasoner.OWLReasonerFactory;
-import org.semanticweb.HermiT.Reasoner;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.OWLAnnotation;
 import org.semanticweb.owlapi.model.OWLAnnotationObjectVisitorEx;
-import org.semanticweb.owlapi.model.OWLAnonymousIndividual;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLEntity;
 import org.semanticweb.owlapi.model.OWLLiteral;
 import org.semanticweb.owlapi.model.OWLNamedIndividual;
-import org.semanticweb.owlapi.model.OWLObjectProperty;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
+import org.semanticweb.owlapi.reasoner.InferenceType;
 import org.semanticweb.owlapi.reasoner.NodeSet;
+import org.semanticweb.owlapi.reasoner.OWLReasoner;
 import org.semanticweb.owlapi.util.OWLObjectVisitorExAdapter;
 
 import uk.ac.manchester.cs.factplusplus.owlapiv3.FaCTPlusPlusReasonerFactory;
-import ontology.ReasonerHermit;
+
+import com.google.common.base.Joiner;
+
+//import ontology.ReasonerHermit;
+import dict.defaultDict;
 
 class LabelExtractor extends OWLObjectVisitorExAdapter<String> implements OWLAnnotationObjectVisitorEx<String> {
 	public String visit(OWLAnnotation annotation) { 
@@ -46,7 +47,7 @@ class LabelExtractor extends OWLObjectVisitorExAdapter<String> implements OWLAnn
 }
 
 public class testReasoner {
-	public static void createTable(HashMap<String, ArrayList<String>> myMap) {
+	public static void createTable(defaultDict<Integer, List<String>> myDict) {//HashMap<String, ArrayList<String>> myMap) {
 		Connection con = null;
 		Statement st = null;
 		ResultSet rs = null;
@@ -58,18 +59,23 @@ public class testReasoner {
 			con.setAutoCommit(false);
 			st = con.createStatement();
 			//st.executeQuery("'rlp_results'");
-			st.addBatch("CREATE TABLE rlp_results(ogc_fid VARCHAR(25), water_regime VARCHAR(25), the_geom geometry(MultiPolygon,25832))");
-			for (Entry<String, ArrayList<String>> ee : myMap.entrySet()) {
-				String key = ee.getKey();
-				ArrayList<String> values = ee.getValue();
+			st.addBatch("CREATE TABLE public.theresult(ogc_fid VARCHAR(25), classified VARCHAR(25)");
+			//st.addBatch("SELECT AddGeometry Column 'the_results', the_geom, 25832, 'MultiPolygon', ")
+			for (Entry<Integer, List<String>> ee : myDict.entrySet()) {
+				Integer key = ee.getKey();
+				List<String> values = ee.getValue();
 				System.out.println();
 				System.out.println(key + ":");
+				String new_value = Joiner.on("_").skipNulls().join(values);
+				/*
 				for (String i : values) {
-					String query = "insert into rlp_results values('" + i
-							+ "','" + key + "')";
-					System.out.println(query);
-					st.addBatch(query);
-				}
+					new_value += i;
+					//
+				}*/
+				String query = "insert into theresult values('" + key
+						+ "','" + new_value + "')";
+				System.out.println(query);
+				st.addBatch(query);
 			}
 			st.executeBatch();
 			con.commit();
@@ -135,12 +141,12 @@ public class testReasoner {
 			classesHash.put("periodic_flooding", new ArrayList<String>());
 			classesHash.put("riparian", new ArrayList<String>());
 			classesHash.put("dry_or_seasonally_wet", new ArrayList<String>());
-			*/
 			classesHash.put("aquatic", new ArrayList<String>());
 			classesHash.put("dry", new ArrayList<String>());
 			classesHash.put("moist", new ArrayList<String>());
 			classesHash.put("mesic", new ArrayList<String>());
 			classesHash.put("wet", new ArrayList<String>());
+			*/
 			ArrayList<String> classList = new ArrayList<String>();
 			classList.add("aquatic");
 			classList.add("dry");
@@ -151,7 +157,7 @@ public class testReasoner {
 			classList.add("periodic_flooding");
 			classList.add("riparian");
 			classList.add("dry_or_seasonally_wet");*/
-			
+			defaultDict<Integer, List<String>> dict = new defaultDict<Integer, List<String>>(ArrayList.class);
 			for (OWLClass c : onto.getClassesInSignature()) {
 				if (classList.isEmpty()){
 					System.out.println("class list empty!");
@@ -164,12 +170,11 @@ public class testReasoner {
 					NodeSet<OWLNamedIndividual> instances = factplusplus
 							.getInstances(c, false);
 					System.out.println("current class: " + currClass + " isEmpty? " + instances.isEmpty());
-					/*NodeSet<OWLNamedIndividual> instances = hermit
-							.getInstances(c, false);*/
 					for (OWLNamedIndividual i : instances.getFlattened()) {
-						classesHash.get(currClass)
-								.add(i.getIRI().getFragment());
-						//System.out.println(i.getIRI().getFragment());
+						//classesHash.get(currClass)
+						//		.add(i.getIRI().getFragment());
+						dict.get(Integer.parseInt(i.getIRI().getFragment())).add(currClass);
+						System.out.println(i.getIRI().getFragment());
 					}
 					System.out.println("Total: "
 							+ instances.getFlattened().size());
@@ -181,24 +186,13 @@ public class testReasoner {
 				System.out.println(clazz.toString());
 				System.out.println("Class size: " + clazz.size());
 			}
-			createTable(classesHash);
+			/* write results to DB */
+			//createTable(classesHash);
+			createTable(dict);
 		} catch (OWLOntologyCreationException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} finally {
 			System.out.println("ALL DONE!");
 		}
 	}
 }
-/*
-				for (OWLNamedIndividual i : factplusplus.getInstances(c, false).getFlattened()) {
-					System.out.println(labelFor(i, onto) + labelFor(c, onto));
-					// get assertions:
-					for (OWLObjectProperty op: onto.getObjectPropertiesInSignature()){
-						NodeSet<OWLNamedIndividual> valuesNodeSet = factplusplus.getObjectPropertyValues(i, op);
-						for (OWLNamedIndividual value : valuesNodeSet.getFlattened()){
-							System.out.println(value.getIRI());
-							//classesHash.get(currClass).add(i.getIRI().getFragment());
-							System.out.println(i.getIRI().getFragment());
-						}
-					} */
