@@ -59,7 +59,7 @@ public class testReasoner {
 			con.setAutoCommit(false);
 			st = con.createStatement();
 			//st.executeQuery("'rlp_results'");
-			st.addBatch("CREATE TABLE theresult(ogc_fid integer, classified VARCHAR(25));");
+			st.addBatch("CREATE TABLE the_results_moist(ogc_fid integer, classified VARCHAR(25));");
 			//st.addBatch("SELECT AddGeometry Column 'the_results', the_geom, 25832, 'MultiPolygon', ")
 			for (Entry<Integer, List<String>> ee : myDict.entrySet()) {
 				Integer key = ee.getKey();
@@ -67,12 +67,7 @@ public class testReasoner {
 				System.out.println();
 				System.out.println(key + ":");
 				String new_value = Joiner.on("_").skipNulls().join(values);
-				/*
-				for (String i : values) {
-					new_value += i;
-					//
-				}*/
-				String query = "insert into theresult values(" + key
+				String query = "insert into the_results_moist values(" + key
 						+ ",'" + new_value + "')";
 				System.out.println(query);
 				st.addBatch(query);
@@ -120,7 +115,7 @@ public class testReasoner {
 	public static void main(String[] args) {
 		OWLOntologyManager mgr = OWLManager.createOWLOntologyManager();
 		File file = new File(
-				"C:\\Users\\Moran\\ontologies\\wetness_base.owl");
+				"C:\\Users\\Moran\\ontologies\\wetness_validation2.owl");
 		OWLOntology onto = null;
 		if (mgr == null || file == null) {
 			System.out.println("ERROR!!");
