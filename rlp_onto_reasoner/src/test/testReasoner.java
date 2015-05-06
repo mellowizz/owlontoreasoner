@@ -59,7 +59,7 @@ public class testReasoner {
 			con.setAutoCommit(false);
 			st = con.createStatement();
 			//st.executeQuery("'rlp_results'");
-			st.addBatch("CREATE TABLE public.theresult(ogc_fid VARCHAR(25), classified VARCHAR(25)");
+			st.addBatch("CREATE TABLE theresult(ogc_fid integer, classified VARCHAR(25));");
 			//st.addBatch("SELECT AddGeometry Column 'the_results', the_geom, 25832, 'MultiPolygon', ")
 			for (Entry<Integer, List<String>> ee : myDict.entrySet()) {
 				Integer key = ee.getKey();
@@ -72,8 +72,8 @@ public class testReasoner {
 					new_value += i;
 					//
 				}*/
-				String query = "insert into theresult values('" + key
-						+ "','" + new_value + "')";
+				String query = "insert into theresult values(" + key
+						+ ",'" + new_value + "')";
 				System.out.println(query);
 				st.addBatch(query);
 			}
