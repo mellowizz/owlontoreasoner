@@ -44,25 +44,33 @@ public class testReasoner {
 		String url = "jdbc:postgresql://localhost/RLP";
 		String user = "postgres";
 		String password = "BobtheBuilder";
+	    ResultSet validClass = null;	
 		try {
 			con = DriverManager.getConnection(url, user, password);
 			con.setAutoCommit(false);
 			st = con.createStatement();
 			//String validationTable = tableName + "_results";
-			System.out.println("going to create tableName: " + tableName + " with results: "+ validationTable);
-			st.addBatch("CREATE TABLE " +  tableName + "as ("
-					+ "select ogc_fid, wetness from " + validationTable); //(ogc_fid integer, classified VARCHAR(25));");
-			st.addBatch("ALTER TABLE " + tableName + " ADD classified VARCHAR(25)");
+			System.out.println("going to create tableName: " + tableName + " from validation table: "+ validationTable);
+			String createSql = "CREATE TABLE " +  tableName + "( ogc_fid integer, wetness VARCHAR(25), classified VARCHAR(25));";
+			/*String createSql = "CREATE TABLE " +  tableName + " as ("
+					+ "select ogc_fid, wetness from " + validationTable +");"; //(ogc_fid integer, classified VARCHAR(25));"); */
+			System.out.println(createSql);
+			st.executeUpdate(createSql);
+			//st.executeQuery("ALTER TABLE " + tableName + " ADD classified VARCHAR(25));");
 			//st.addBatch("CREATE TABLE + " +  tableName + "(ogc_fid integer, classified VARCHAR(25));");
-			st.executeBatch();
-			for (Entry<Integer, List<String>> ee : myDict.entrySet()) {
+			validClass = st.executeQuery("select ogc_fid, wetness from " + validationTable);
+			HashMap<Integer, String> validClasses = new HashMap <Integer, String>();
+			while (validClass.next()){
+				validClasses.put(validClass.getInt("ogc_fid"), validClass.getString("wetness"));
+			}
+			 for (Entry<Integer, List<String>> ee : myDict.entrySet()) {
 				Integer key = ee.getKey();
 				List<String> values = ee.getValue();
 				System.out.println();
 				System.out.println(key + ":");
 				String new_value = Joiner.on("_").skipNulls().join(values);
-				String query = "insert into " + tableName + "(ogc_fid, classified) values(" + key +
-						",'" + new_value + "')";
+				String query = "insert into " + tableName + "(ogc_fid, wetness, classified) values(" + key +
+						",'" + validClasses.get(key) +"','" + new_value + "');";
 				System.out.println(query);
 				st.addBatch(query);
 			}
@@ -77,15 +85,10 @@ public class testReasoner {
 			lgr.log(Level.SEVERE, ex.getMessage(), ex);
 		} finally {
 			try {
-				if (rs != null) {
-					rs.close();
-				}
-				if (st != null) {
-					st.close();
-				}
-				if (con != null) {
-					con.close();
-				}
+				if (validClass != null) validClass.close();
+				if (rs != null) rs.close();
+				if (st != null) st.close();
+				if (con != null) con.close();
 			} catch (SQLException ex) {
 				Logger lgr = Logger.getLogger(testReasoner.class.getName());
 				lgr.log(Level.SEVERE, ex.getMessage(), ex);
@@ -97,7 +100,7 @@ public class testReasoner {
 	public static void main(String[] args) {
 		OWLOntologyManager mgr = OWLManager.createOWLOntologyManager();
 		File file = new File(
-				"C:\\Users\\Moran\\ontologies\\without_moist_mesic.owl");
+				"C:\\Users\\Moran\\ontologies\\without_moist_mesic_big.owl");
 		String tableName;
 		OWLOntology onto = null;
 		if (mgr == null || file == null) {
@@ -154,8 +157,9 @@ public class testReasoner {
 				System.out.println("Class size: " + clazz.size());
 			}
 			/* write results to DB */
-			
-			createTable(dict, tableName, "validation_without_mesic_moist");
+			String validationTable = "validation_without_mesic_moist_big";
+			String tryIt = validationTable + "_results";
+			createTable(dict, tryIt, validationTable); 
 		} catch (OWLOntologyCreationException e) {
 			e.printStackTrace();
 		} finally {
