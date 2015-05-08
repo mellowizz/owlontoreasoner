@@ -36,6 +36,9 @@ import com.google.common.base.Joiner;
 //import ontology.ReasonerHermit;
 import dict.defaultDict;
 
+
+//public computeAccuracyAsessement(H) 
+
 public class testReasoner {
 	public static void createTable(defaultDict<Integer, List<String>> myDict, String tableName, String validationTable) {//HashMap<String, ArrayList<String>> myMap) {
 		Connection con = null;
@@ -51,7 +54,7 @@ public class testReasoner {
 			st = con.createStatement();
 			//String validationTable = tableName + "_results";
 			System.out.println("going to create tableName: " + tableName + " from validation table: "+ validationTable);
-			String createSql = "CREATE TABLE " +  tableName + "( ogc_fid integer, wetness VARCHAR(25), classified VARCHAR(25));";
+			String createSql = "CREATE TABLE " +  tableName + "( ogc_fid integer, wetness VARCHAR(25), classified VARCHAR(25), PRIMARY KEY(ogc_fid));";
 			/*String createSql = "CREATE TABLE " +  tableName + " as ("
 					+ "select ogc_fid, wetness from " + validationTable +");"; //(ogc_fid integer, classified VARCHAR(25));"); */
 			System.out.println(createSql);
@@ -71,6 +74,7 @@ public class testReasoner {
 				String new_value = Joiner.on("_").skipNulls().join(values);
 				String query = "insert into " + tableName + "(ogc_fid, wetness, classified) values(" + key +
 						",'" + validClasses.get(key) +"','" + new_value + "');";
+				
 				System.out.println(query);
 				st.addBatch(query);
 			}
@@ -100,7 +104,7 @@ public class testReasoner {
 	public static void main(String[] args) {
 		OWLOntologyManager mgr = OWLManager.createOWLOntologyManager();
 		File file = new File(
-				"C:\\Users\\Moran\\ontologies\\without_moist_mesic_big.owl");
+				"C:\\Users\\Moran\\ontologies\\wetness_10_big_all.owl");
 		String tableName;
 		OWLOntology onto = null;
 		if (mgr == null || file == null) {
@@ -157,7 +161,7 @@ public class testReasoner {
 				System.out.println("Class size: " + clazz.size());
 			}
 			/* write results to DB */
-			String validationTable = "validation_without_mesic_moist_big";
+			String validationTable = "validation_wetness_10_big";
 			String tryIt = validationTable + "_results";
 			createTable(dict, tryIt, validationTable); 
 		} catch (OWLOntologyCreationException e) {
