@@ -55,12 +55,8 @@ public class testReasoner {
 			//String validationTable = tableName + "_results";
 			System.out.println("going to create tableName: " + tableName + " from validation table: "+ validationTable);
 			String createSql = "CREATE TABLE " +  tableName + "( ogc_fid integer, wetness VARCHAR(25), classified VARCHAR(25), PRIMARY KEY(ogc_fid));";
-			/*String createSql = "CREATE TABLE " +  tableName + " as ("
-					+ "select ogc_fid, wetness from " + validationTable +");"; //(ogc_fid integer, classified VARCHAR(25));"); */
 			System.out.println(createSql);
 			st.executeUpdate(createSql);
-			//st.executeQuery("ALTER TABLE " + tableName + " ADD classified VARCHAR(25));");
-			//st.addBatch("CREATE TABLE + " +  tableName + "(ogc_fid integer, classified VARCHAR(25));");
 			validClass = st.executeQuery("select ogc_fid, wetness from " + validationTable);
 			HashMap<Integer, String> validClasses = new HashMap <Integer, String>();
 			while (validClass.next()){
@@ -104,7 +100,7 @@ public class testReasoner {
 	public static void main(String[] args) {
 		OWLOntologyManager mgr = OWLManager.createOWLOntologyManager();
 		File file = new File(
-				"C:\\Users\\Moran\\ontologies\\wetness_10_big_all.owl");
+				"C:\\Users\\Moran\\ontologies\\wetness_10_osm_newer.owl");
 		String tableName;
 		OWLOntology onto = null;
 		if (mgr == null || file == null) {
@@ -161,9 +157,10 @@ public class testReasoner {
 				System.out.println("Class size: " + clazz.size());
 			}
 			/* write results to DB */
-			String validationTable = "validation_wetness_10_big";
-			String tryIt = validationTable + "_results";
-			createTable(dict, tryIt, validationTable); 
+			//String originalDataTable = "rlp_eunis_all_parameters";
+			String validationTable = "validation_wetness_10_osm_new";
+			String resultsTable = validationTable + "_results";
+			createTable(dict, resultsTable, validationTable); 
 		} catch (OWLOntologyCreationException e) {
 			e.printStackTrace();
 		} finally {
