@@ -31,6 +31,15 @@ public class OntologyWriter {
 	 * 
 	 * Writes properties and classes to ontology
 	 */
+	
+	OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
+	OWLOntology ontology;
+	OWLDataFactory factory; // = manager.getOWLDataFactory();
+	public OntologyWriter(IRI documentIRI) throws OWLOntologyCreationException{
+		manager.loadOntologyFromOntologyDocument(documentIRI);	
+		factory = manager.getOWLDataFactory();
+	}
+	
 	public void writeClasses(LinkedHashSet<OntologyClass> classes,
 			IRI documentIRI, IRI ontologyIRI)
 			throws OWLOntologyCreationException, OWLOntologyStorageException {

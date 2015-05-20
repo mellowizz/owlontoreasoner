@@ -9,14 +9,7 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashSet;
-import java.util.List;
-
-import jxl.Cell;
-import jxl.Sheet;
-import jxl.Workbook;
-import jxl.read.biff.BiffException;
 
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
@@ -26,23 +19,32 @@ import owlAPI.Individual;
 import owlAPI.OntologyClass;
 import owlAPI.OntologyCreator;
 import owlAPI.OntologyWriter;
+import csvToOWLRules.CSVToOWLRulesConverter;
 
 public class DBToOWLIndividualConverter {
 
-	public void convertDB(String tableName) //List<String> colNames)
+	public void convertDB(String tableName, String fileDir) // List<String> colNames)
 			throws SQLException, IOException {
 		LinkedHashSet<Individual> individuals;
 		LinkedHashSet<OntologyClass> classes;
-		File owlFile = new File("C:/Users/Moran/ontologies/" +tableName + ".owl");
+		//LinkedHashSet<OWLDataRangeFacetRestriction> rules;
+		File owlFile = new File("C:/Users/Moran/ontologies/" + tableName
+				+ ".owl");
 		try {
+			// create ontology 
+			OntologyCreator ontCreate = new OntologyCreator();
+			String ontologyIRI = "http://www.user.tu-berlin.de/niklasmoran/EUNIS/"
+					+ owlFile.getName().trim();
+			ontCreate.createOntology(ontologyIRI, "version_1_0", owlFile);
+			/* get classes and individuals */
 			classes = createClassesfromDB(tableName);
 			individuals = createIndividualsFromDB(tableName);
-			OntologyWriter ontWrite = new OntologyWriter();
-			OntologyCreator ontCreate = new OntologyCreator();
-			String ontologyIRI = "http://www.user.tu-berlin.de/niklasmoran/EUNIS/" + owlFile.getName().trim();
-			ontCreate.createOntology(ontologyIRI, "version_1_0", owlFile);
-			ontWrite.writeClasses(classes, IRI.create(owlFile.toURI()), IRI.create(ontologyIRI));
+			OntologyWriter ontWrite = new OntologyWriter(IRI.create(owlFile.toURI()));
+			ontWrite.writeClasses(classes, IRI.create(owlFile.toURI()),
+					IRI.create(ontologyIRI));
 			ontWrite.writeIndividuals(individuals, IRI.create(owlFile.toURI()));
+			//ontWrite.writeRules(rules, IRI.create(owlFile.toURI()));
+			CSVToOWLRulesConverter therules = new CSVToOWLRulesConverter(fileDir, IRI.create(owlFile.toURI())); //createRulesFromCSV();
 		}
 
 		catch (OWLOntologyStorageException e2) {
@@ -55,7 +57,8 @@ public class DBToOWLIndividualConverter {
 
 	}
 
-	public LinkedHashSet<OntologyClass> createClassesfromDB(String tableName) throws IOException, SQLException {
+	public LinkedHashSet<OntologyClass> createClassesfromDB(String tableName)
+			throws IOException, SQLException {
 		/* Read from DB */
 		String url = "jdbc:postgresql://localhost/RLP?user=postgres&password=BobtheBuilder";
 		Statement st = null;
@@ -84,7 +87,8 @@ public class DBToOWLIndividualConverter {
 		return eunisClasses;
 	}
 
-	private LinkedHashSet<Individual> createIndividualsFromDB(String tableName) throws SQLException {
+	private LinkedHashSet<Individual> createIndividualsFromDB(String tableName)
+			throws SQLException {
 		/* Read from DB */
 		System.out.println("getting object values from DB!");
 		String url = "jdbc:postgresql://localhost/RLP?user=postgres&password=BobtheBuilder";
@@ -108,9 +112,9 @@ public class DBToOWLIndividualConverter {
 				System.out.println(tableName + " is empty!!");
 			}
 
-			System.out.println("RS size: ");
+			// System.out.println("RS size: ");
 			while (rs.next()) {
-				System.out.println("RS");
+				// System.out.println("RS");
 				ArrayList<Number> values = new ArrayList<Number>();
 				ArrayList<String> DataPropertyNames = new ArrayList<String>();
 				Individual individual = new Individual();
@@ -129,10 +133,11 @@ public class DBToOWLIndividualConverter {
 				individual.setDataPropertyNames(DataPropertyNames);
 				// add to individuals
 				individuals.add(individual);
-				System.out.println(individual.getDataPropertyNames() + " : "
-						+ individual.getValues());
+				// System.out.println(individual.getDataPropertyNames() + " : "
+				// + individual.getValues());
 			}
 		} catch (SQLException e) {
+			e.printStackTrace();
 		} finally {
 			if (st != null) {
 				st.close();
@@ -146,9 +151,9 @@ public class DBToOWLIndividualConverter {
 
 		String tableName = args[0];
 		File existingOWLFile = new File(args[1]);
-		//System.out.println(fields.toString());
+		// System.out.println(fields.toString());
 		System.out.println("About to add: " + tableName + " to "
 				+ existingOWLFile);
-		test.convertDB(tableName); //, fields);
+		test.convertDB(tableName, "c:/Users/Moran/test-rlp/wetness_10_gt100"); // , fields);
 	}
 }

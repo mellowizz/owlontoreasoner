@@ -1,5 +1,8 @@
 package test;
 
+import dict.defaultDict;
+import com.google.common.base.Joiner;
+
 import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -14,12 +17,9 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import uk.ac.manchester.cs.factplusplus.owlapiv3.FaCTPlusPlusReasonerFactory;
 import org.semanticweb.owlapi.apibinding.OWLManager;
-import org.semanticweb.owlapi.model.OWLAnnotation;
-import org.semanticweb.owlapi.model.OWLAnnotationObjectVisitorEx;
 import org.semanticweb.owlapi.model.OWLClass;
-import org.semanticweb.owlapi.model.OWLEntity;
-import org.semanticweb.owlapi.model.OWLLiteral;
 import org.semanticweb.owlapi.model.OWLNamedIndividual;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
@@ -27,17 +27,6 @@ import org.semanticweb.owlapi.model.OWLOntologyManager;
 import org.semanticweb.owlapi.reasoner.InferenceType;
 import org.semanticweb.owlapi.reasoner.NodeSet;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
-import org.semanticweb.owlapi.util.OWLObjectVisitorExAdapter;
-
-import uk.ac.manchester.cs.factplusplus.owlapiv3.FaCTPlusPlusReasonerFactory;
-
-import com.google.common.base.Joiner;
-
-//import ontology.ReasonerHermit;
-import dict.defaultDict;
-
-
-//public computeAccuracyAsessement(H) 
 
 public class testReasoner {
 	public static void createTable(defaultDict<Integer, List<String>> myDict, String tableName, String validationTable) {//HashMap<String, ArrayList<String>> myMap) {
@@ -99,8 +88,9 @@ public class testReasoner {
 	
 	public static void main(String[] args) {
 		OWLOntologyManager mgr = OWLManager.createOWLOntologyManager();
+		String fileName = "validation_wetness_10_gt50_new.owl";
 		File file = new File(
-				"C:\\Users\\Moran\\ontologies\\wetness_10_osm_newer.owl");
+				"C:\\Users\\Moran\\ontologies\\" + fileName);
 		String tableName;
 		OWLOntology onto = null;
 		if (mgr == null || file == null) {
@@ -138,7 +128,7 @@ public class testReasoner {
 				
 				String currClass = c.getIRI().getFragment();			
 				System.out.println("current class: " + currClass);
-				if (classList.contains(currClass)) {
+				//if (classList.contains(currClass)) {
 					NodeSet<OWLNamedIndividual> instances = factplusplus
 							.getInstances(c, false);
 					System.out.println("current class: " + currClass + " isEmpty? " + instances.isEmpty());
@@ -148,9 +138,9 @@ public class testReasoner {
 					}
 					System.out.println("Total: "
 							+ instances.getFlattened().size());
-				} else{
-					continue;
-				}
+				//} else{
+				//	continue;
+				//}
 			}
 			for (ArrayList<String> clazz: classesHash.values()){
 				System.out.println(clazz.toString());
@@ -158,7 +148,7 @@ public class testReasoner {
 			}
 			/* write results to DB */
 			//String originalDataTable = "rlp_eunis_all_parameters";
-			String validationTable = "validation_wetness_10_osm_new";
+			String validationTable = "validation_wetness_10_gt50";
 			String resultsTable = validationTable + "_results";
 			createTable(dict, resultsTable, validationTable); 
 		} catch (OWLOntologyCreationException e) {
