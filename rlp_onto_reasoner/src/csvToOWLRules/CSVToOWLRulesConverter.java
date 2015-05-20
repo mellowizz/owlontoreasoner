@@ -103,7 +103,7 @@ public class CSVToOWLRulesConverter {
 			    String key = entry.getKey();
 			    Set value = entry.getValue();
 			    // ...
-			OWLClass currClass = factory.getOWLClass(IRI.create(documentIRI + "#" + key));
+			OWLClass currClass = factory.getOWLClass(IRI.create("#" + key));
 			OWLObjectIntersectionOf intersection = factory.getOWLObjectIntersectionOf(value);//classExpressions);// IntersectionOf( dataRanges);
 			            //newAxioms.add(wetnessQuality);
 			            //OWLAxiom newAx = factory.getOWLEquivalentObjectPropertiesAxiom(wetnessQuality);
