@@ -5,7 +5,11 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -44,6 +48,7 @@ public class CSVToOWLRulesConverter {
 		OWLDataFactory factory = manager.getOWLDataFactory();
 		//Set<OWLDatatypeRestriction> rules = null;
 		OWLDatatype doubleDatatype = factory.getDoubleOWLDatatype();
+		HashMap<String, Set> classesExpressions = new HashMap<String, Set>();
 		for (final File csvFile: file.listFiles()){
 			Set dataRanges = new HashSet();
 			Set classExpressions = new HashSet();
@@ -57,7 +62,7 @@ public class CSVToOWLRulesConverter {
 				String [] nextLine;
 				int lineNum = 1;
 				OWLDatatypeRestriction newRestriction = null;
-	            OWLDataProperty hasParameter = null; 
+	            OWLDataProperty hasParameter = null;
 				while ((nextLine = reader.readNext())!=null && lineNum<=4){
 					String parameter = "has_" + nextLine[0];
 					String direction = nextLine[2];
@@ -92,16 +97,22 @@ public class CSVToOWLRulesConverter {
 						e.printStackTrace();
 					}
 				}
-				OWLClass currClass = factory.getOWLClass(IRI.create(documentIRI + "#" + classNames[1]));
-				
-						OWLObjectIntersectionOf intersection = factory.getOWLObjectIntersectionOf(classExpressions);// IntersectionOf( dataRanges);
+				classesExpressions.put(classNames[1], classExpressions);
+			}
+			for (Entry<String, Set> entry : classesExpressions.entrySet()) {
+			    String key = entry.getKey();
+			    Set value = entry.getValue();
+			    // ...
+			OWLClass currClass = factory.getOWLClass(IRI.create(documentIRI + "#" + key));
+			OWLObjectIntersectionOf intersection = factory.getOWLObjectIntersectionOf(value);//classExpressions);// IntersectionOf( dataRanges);
 			            //newAxioms.add(wetnessQuality);
 			            //OWLAxiom newAx = factory.getOWLEquivalentObjectPropertiesAxiom(wetnessQuality);
 			            //OWLAxiom newDefinition = factory.getOWLEquivalentClassesAxiom(currClass, wetnessQuality);
 			            //manager.addAxiom(ontology, newDefinition);
-						manager.addAxiom(ontology, factory.getOWLEquivalentClassesAxiom(currClass, intersection));
+			manager.addAxiom(ontology, factory.getOWLEquivalentClassesAxiom(currClass, intersection));
 						//manager.addAxiom(ontology, factory.getOWLSubClassOfAxiom(currClass, intersection));
-			}
+			// add class to Hashset and loop over?!
+		    }
 		}
 		//if (rules.isEmpty()){ System.out.println("!!!! rules are empty!!!"); }
 		manager.saveOntology(ontology);

@@ -56,11 +56,12 @@ public class OntologyWriter {
 
 		SimpleIRIMapper mapper = new SimpleIRIMapper(ontologyIRI, documentIRI);
 		manager.addIRIMapper(mapper);
-
+		OWLClass wetness = factory.getOWLClass(IRI.create(ontologyIRI + "#wetness")); ;
+		//manager.applyChange(new AddAxiom(ontology, wetnessThing));
 		for (OntologyClass EUClass : classes) {
 			 OWLClass cls = factory.getOWLClass(IRI.create(ontologyIRI + "#"+EUClass.getName()));
 			 OWLClass thing = factory.getOWLThing();
-			 OWLAxiom classAx = factory.getOWLSubClassOfAxiom(cls, thing);
+			 OWLAxiom classAx = factory.getOWLSubClassOfAxiom(cls, wetness);
 			 manager.applyChange(new AddAxiom(ontology, classAx));
 			 
 			 //OWLAnnotation commentAnno = factory.getOWLAnnotation(factory.getRDFSComment(),
