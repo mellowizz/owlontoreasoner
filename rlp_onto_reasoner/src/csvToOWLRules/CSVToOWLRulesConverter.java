@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -20,6 +21,8 @@ import org.semanticweb.owlapi.model.OWLDataProperty;
 import org.semanticweb.owlapi.model.OWLDataRange;
 import org.semanticweb.owlapi.model.OWLDatatype;
 import org.semanticweb.owlapi.model.OWLDatatypeRestriction;
+import org.semanticweb.owlapi.model.OWLObjectIntersectionOf;
+import org.semanticweb.owlapi.model.OWLObjectPropertyExpression;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
@@ -42,7 +45,10 @@ public class CSVToOWLRulesConverter {
 		//Set<OWLDatatypeRestriction> rules = null;
 		OWLDatatype doubleDatatype = factory.getDoubleOWLDatatype();
 		for (final File csvFile: file.listFiles()){
-			Set<OWLDataRange> dataRanges = null;
+			Set dataRanges = new HashSet();
+			Set classExpressions = new HashSet();
+			//Set<OWLAxiom> newAxioms = null;
+			Set<OWLObjectPropertyExpression> newAxioms = null;
 			if (extensionFilter.accept(csvFile)){
 				reader = new CSVReader(new FileReader(csvFile));
 				String fileNameNoExt = FilenameUtils.removeExtension(csvFile.getName());
@@ -52,7 +58,6 @@ public class CSVToOWLRulesConverter {
 				int lineNum = 1;
 				OWLDatatypeRestriction newRestriction = null;
 	            OWLDataProperty hasParameter = null; 
-				//ArrayList<OWLClass> owlclasses = ontology.getClassesInSignature().toArray();
 				while ((nextLine = reader.readNext())!=null && lineNum<=4){
 					String parameter = "has_" + nextLine[0];
 					String direction = nextLine[2];
@@ -60,6 +65,7 @@ public class CSVToOWLRulesConverter {
 					System.out.println(parameter + " direction: " + direction + " threshold: " + threshold);
 					//OWLDatatype owlDouble = factory.getOWLDatat
 					hasParameter = factory.getOWLDataProperty(IRI.create(documentIRI + "#" + parameter));
+					
 					try{
 						if (direction.equals("<")){
 							newRestriction = factory.getOWLDatatypeRestriction(doubleDatatype, factory.getOWLFacetRestriction(MAX_EXCLUSIVE, Double.parseDouble(threshold)));
@@ -75,17 +81,26 @@ public class CSVToOWLRulesConverter {
 							System.out.println("Something went wrong!!");
 							continue;
 						}
-						OWLClass currClass = factory.getOWLClass(IRI.create(documentIRI + "#" + classNames[1]));
+						// add new data restriction!
 						OWLClassExpression newWetnessRestriction = factory.getOWLDataSomeValuesFrom(hasParameter, newRestriction);
-			            OWLClassExpression wetnessQuality = factory.getOWLObjectIntersectionOf(currClass, newWetnessRestriction);
-			            OWLAxiom newDefinition = factory.getOWLEquivalentClassesAxiom(currClass, wetnessQuality);
-			            manager.addAxiom(ontology, newDefinition);
+						classExpressions.add(newWetnessRestriction);
+						// OWLClassExpression wetnessQuality = factory.getOWLObjectIntersectionOf(currClass, newWetnessRestriction);
+			            
 						lineNum++;
 					}
 					catch (NullPointerException e){
 						e.printStackTrace();
 					}
 				}
+				OWLClass currClass = factory.getOWLClass(IRI.create(documentIRI + "#" + classNames[1]));
+				
+						OWLObjectIntersectionOf intersection = factory.getOWLObjectIntersectionOf(classExpressions);// IntersectionOf( dataRanges);
+			            //newAxioms.add(wetnessQuality);
+			            //OWLAxiom newAx = factory.getOWLEquivalentObjectPropertiesAxiom(wetnessQuality);
+			            //OWLAxiom newDefinition = factory.getOWLEquivalentClassesAxiom(currClass, wetnessQuality);
+			            //manager.addAxiom(ontology, newDefinition);
+						manager.addAxiom(ontology, factory.getOWLEquivalentClassesAxiom(currClass, intersection));
+						//manager.addAxiom(ontology, factory.getOWLSubClassOfAxiom(currClass, intersection));
 			}
 		}
 		//if (rules.isEmpty()){ System.out.println("!!!! rules are empty!!!"); }
