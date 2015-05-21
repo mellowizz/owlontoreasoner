@@ -15,6 +15,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.semanticweb.owlapi.model.IRI;
+import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyStorageException;
 
@@ -48,8 +49,8 @@ public class DBToOWLIndividualConverter {
 					IRI.create(ontologyIRI));
 			ontWrite.writeIndividuals(individuals, IRI.create(owlFile.toURI()));
 			//ontWrite.writeRules(rules, IRI.create(owlFile.toURI()));
-			CSVToOWLRulesConverter therules = new CSVToOWLRulesConverter(fileDir, IRI.create(owlFile.toURI())); //createRulesFromCSV();
-			defaultDict<String, List<Set>> rules = therules.CSVRulesConverter();
+			CSVToOWLRulesConverter therules = new CSVToOWLRulesConverter(fileDir, IRI.create(owlFile.toURI()), 3); // 3 rules
+			defaultDict<String, List<OWLClassExpression>> rules = therules.CSVRulesConverter();
 			ontWrite.writeAll(classes, individuals, rules, IRI.create(owlFile.toURI()), IRI.create(ontologyIRI));
 			
 		}

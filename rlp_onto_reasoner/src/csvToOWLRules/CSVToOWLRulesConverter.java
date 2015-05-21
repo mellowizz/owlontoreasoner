@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -38,17 +39,20 @@ import static org.semanticweb.owlapi.vocab.OWLFacet.MIN_EXCLUSIVE;
 
 import com.opencsv.CSVReader;
 
+import dict.defaultDict;
+
 public class CSVToOWLRulesConverter {
-	
 	String directory;
 	IRI docIRI;
+	int numRules;
 		
-	public CSVToOWLRulesConverter(String csvDir, IRI documentIRI){
+	public CSVToOWLRulesConverter(String csvDir, IRI documentIRI, int numberOfRules){
 		this.directory = csvDir;
 		this.docIRI = documentIRI;
+		this.numRules = numberOfRules;
 	}
 	
-	public HashMap<String, Set> CSVRulesConverter() throws OWLOntologyCreationException, NumberFormatException, IOException{ //String csvDir, IRI documentIRI) throws OWLOntologyCreationException, NumberFormatException, IOException, OWLOntologyStorageException{
+	public defaultDict<String, List<OWLClassExpression>> CSVRulesConverter() throws OWLOntologyCreationException, NumberFormatException, IOException{ 
 		final FileNameExtensionFilter extensionFilter = new FileNameExtensionFilter("csv", "CSV");
 		final File file = new File(this.directory);
 		CSVReader reader; // new CSVReader(new FileReader(csvFile));
@@ -57,11 +61,9 @@ public class CSVToOWLRulesConverter {
 		OWLDataFactory factory = manager.getOWLDataFactory();
 		//Set<OWLDatatypeRestriction> rules = null;
 		OWLDatatype doubleDatatype = factory.getDoubleOWLDatatype();
-		HashMap<String, Set> classesExpressions = new HashMap<String, Set>();
+		defaultDict<String, List<OWLClassExpression>> classesExpressions = new defaultDict<String, List<OWLClassExpression>>(ArrayList.class);
 		for (final File csvFile: file.listFiles()){
-			Set dataRanges = new HashSet();
-			Set classExpressions = new HashSet();
-			//Set<OWLAxiom> newAxioms = null;
+			//Set dataRanges = new HashSet();
 			Set<OWLObjectPropertyExpression> newAxioms = null;
 			if (extensionFilter.accept(csvFile)){
 				reader = new CSVReader(new FileReader(csvFile));
@@ -74,7 +76,7 @@ public class CSVToOWLRulesConverter {
 				OWLFacetRestriction maxormin= null;
 				OWLDataProperty hasParameter = null;
 	            /* could make MAX_EXCLUSIVE set by if/else than emit right code */
-	            while ((nextLine = reader.readNext())!=null && lineNum<=4){
+	            while ((nextLine = reader.readNext())!=null && lineNum<= this.numRules){
 					String parameter = "has_" + nextLine[0];
 					String direction = nextLine[2];
 					String threshold = nextLine[3];
@@ -83,19 +85,9 @@ public class CSVToOWLRulesConverter {
 					hasParameter = factory.getOWLDataProperty(IRI.create("#" + parameter));
 					try{
 						if (direction.equals("<")) {
-				            //OWLFacetRestriction geq13 = factory.getOWLFacetRestriction(MIN_INCLUSIVE, factory.getOWLTypedLiteral(13));
-							//newRestriction = factory.getOWLDatatypeRestriction(doubleDatatype, factory.getOWLFacetRestriction(MAX_EXCLUSIVE, Double.parseDouble(threshold)));
-							//maxormin =  factory.getOWLFacetRestriction(MAX_EXCLUSIVE, arg0) Double.parseDouble(threshold)));
-							//	= factory.getOWLDatatypeRestriction(doubleDatatype, factory.getOWLFacetRestriction(MAX_EXCLUSIVE, Double.parseDouble(threshold)));
 							newRestriction = factory.getOWLDatatypeMaxExclusiveRestriction(Double.parseDouble(threshold));
-							//rules.add(factory.getOWLDatatypeMaxExclusiveRestriction(Double.parseDouble(threshold)));
-							//rules.add(factory.getOWLDatatypeMaxExclusiveRestriction(Double.parseDouble(threshold)));
 						} else if (direction.equals(">")){
-							
 							newRestriction = factory.getOWLDatatypeMaxExclusiveRestriction(Double.parseDouble(threshold));
-							//maxormin  =  factory.getOWLFacetRestriction(MIN_EXCLUSIVE, Double.parseDouble(threshold));
-							//newRestriction = factory.getOWLFacetRestriction(doubleDatatype, factory.getOWLFacetRestriction(MIN_EXCLUSIVE, Double.parseDouble(threshold)));
-							//rules.add(factory.getOWLDatatypeMinExclusiveRestriction(Double.parseDouble(threshold)));
 						}else{
 							System.out.println("DID NOT FIND > or < in CSV file: " + csvFile.getName());
 						}
@@ -106,19 +98,19 @@ public class CSVToOWLRulesConverter {
 						}
 						// add new data restriction!
 						OWLClassExpression newWetnessRestriction = factory.getOWLDataSomeValuesFrom(hasParameter, newRestriction);
-						classExpressions.add(newWetnessRestriction);
+						//classExpressions.add(newWetnessRestriction);
+						classesExpressions.get(classNames[1]).add(newWetnessRestriction);
 						// OWLClassExpression wetnessQuality = factory.getOWLObjectIntersectionOf(currClass, newWetnessRestriction);
-			            
 						lineNum++;
 					}
 					catch (NullPointerException e){
 						e.printStackTrace();
 					}
 				}
-				classesExpressions.put(classNames[1], classExpressions);
 			}
 		}
 		//if (rules.isEmpty()){ System.out.println("!!!! rules are empty!!!"); }
+			System.out.println("There are: " + classesExpressions.size() + " keys: " + classesExpressions.keySet().size());
 			return classesExpressions;
 	}
 }

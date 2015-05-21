@@ -1,6 +1,7 @@
 package owlAPI;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map.Entry;
@@ -12,6 +13,7 @@ import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLAnnotation;
 import org.semanticweb.owlapi.model.OWLAxiom;
 import org.semanticweb.owlapi.model.OWLClass;
+import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.model.OWLDataFactory;
 import org.semanticweb.owlapi.model.OWLDataProperty;
 import org.semanticweb.owlapi.model.OWLDataPropertyAssertionAxiom;
@@ -27,6 +29,8 @@ import org.semanticweb.owlapi.model.PrefixManager;
 import org.semanticweb.owlapi.util.DefaultPrefixManager;
 import org.semanticweb.owlapi.util.SimpleIRIMapper;
 import org.semanticweb.owlapi.vocab.OWL2Datatype;
+
+
 
 
 
@@ -52,7 +56,7 @@ public class OntologyWriter {
 	 */
 
 	public void writeAll(LinkedHashSet<OntologyClass> classes,
-			LinkedHashSet<Individual> individuals, defaultDict<String, List<Set>> classesExpressions, IRI documentIRI,
+			LinkedHashSet<Individual> individuals, defaultDict<String, List<OWLClassExpression>> classesExpressions, IRI documentIRI,
 			IRI ontologyIRI) throws OWLOntologyCreationException,
 			OWLOntologyStorageException {
 
@@ -107,14 +111,16 @@ public class OntologyWriter {
 		}
 		OWLObjectIntersectionOf intersection = null;
 		OWLClass owlCls = null;
-		for (Entry<String, List<Set>> entry : classesExpressions.entrySet()) {
+		for (Entry<String, List<OWLClassExpression>> entry : classesExpressions.entrySet()) {
+			Set rules = new HashSet();
 			String currCls = entry.getKey();
-			List<Set> value = entry.getValue();
-			for (Set rule : value){
+			List<OWLClassExpression> value = entry.getValue();
+			for (OWLClassExpression rule : value){
 				owlCls = factory.getOWLClass(IRI.create("#" + currCls));
-				intersection = factory
-					.getOWLObjectIntersectionOf(rule);
+				rules.add(rule);
 			}
+			System.out.println("about to add:" + rules.size());
+			intersection = factory.getOWLObjectIntersectionOf(rules);
 			manager.addAxiom(ontology, factory.getOWLEquivalentClassesAxiom(
 					owlCls, intersection));
 		}
