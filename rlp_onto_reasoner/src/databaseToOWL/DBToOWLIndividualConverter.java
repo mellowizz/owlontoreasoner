@@ -9,7 +9,9 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
+import java.util.Set;
 
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
@@ -39,12 +41,15 @@ public class DBToOWLIndividualConverter {
 			/* get classes and individuals */
 			classes = createClassesfromDB(tableName);
 			individuals = createIndividualsFromDB(tableName);
-			OntologyWriter ontWrite = new OntologyWriter(IRI.create(owlFile.toURI()));
+			OntologyWriter ontWrite = new OntologyWriter(); //IRI.create(owlFile.toURI()));
 			ontWrite.writeClasses(classes, IRI.create(owlFile.toURI()),
 					IRI.create(ontologyIRI));
 			ontWrite.writeIndividuals(individuals, IRI.create(owlFile.toURI()));
 			//ontWrite.writeRules(rules, IRI.create(owlFile.toURI()));
 			CSVToOWLRulesConverter therules = new CSVToOWLRulesConverter(fileDir, IRI.create(owlFile.toURI())); //createRulesFromCSV();
+			HashMap<String, Set> rules = therules.CSVRulesConverter();
+			ontWrite.writeAll(classes, individuals, rules, IRI.create(owlFile.toURI()), IRI.create(ontologyIRI));
+			
 		}
 
 		catch (OWLOntologyStorageException e2) {
