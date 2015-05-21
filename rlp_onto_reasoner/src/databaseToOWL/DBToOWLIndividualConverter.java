@@ -1,5 +1,6 @@
 package databaseToOWL;
 
+import java.util.List;
 import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
@@ -22,6 +23,7 @@ import owlAPI.OntologyClass;
 import owlAPI.OntologyCreator;
 import owlAPI.OntologyWriter;
 import csvToOWLRules.CSVToOWLRulesConverter;
+import dict.defaultDict;
 
 public class DBToOWLIndividualConverter {
 
@@ -47,7 +49,7 @@ public class DBToOWLIndividualConverter {
 			ontWrite.writeIndividuals(individuals, IRI.create(owlFile.toURI()));
 			//ontWrite.writeRules(rules, IRI.create(owlFile.toURI()));
 			CSVToOWLRulesConverter therules = new CSVToOWLRulesConverter(fileDir, IRI.create(owlFile.toURI())); //createRulesFromCSV();
-			HashMap<String, Set> rules = therules.CSVRulesConverter();
+			defaultDict<String, List<Set>> rules = therules.CSVRulesConverter();
 			ontWrite.writeAll(classes, individuals, rules, IRI.create(owlFile.toURI()), IRI.create(ontologyIRI));
 			
 		}
