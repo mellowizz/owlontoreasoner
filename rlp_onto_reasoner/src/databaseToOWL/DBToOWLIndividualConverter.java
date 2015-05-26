@@ -28,7 +28,7 @@ import dict.defaultDict;
 
 public class DBToOWLIndividualConverter {
 
-	public void convertDB(String tableName, String fileDir) // List<String> colNames)
+	public void convertDB(String tableName, String fileDir, String colName) // List<String> colNames)
 			throws SQLException, IOException {
 		LinkedHashSet<Individual> individuals;
 		LinkedHashSet<OntologyClass> classes;
@@ -42,14 +42,14 @@ public class DBToOWLIndividualConverter {
 					+ owlFile.getName().trim();
 			ontCreate.createOntology(ontologyIRI, "version_1_0", owlFile);
 			/* get classes and individuals */
-			classes = createClassesfromDB(tableName);
+			classes = createClassesfromDB(tableName, colName);
 			individuals = createIndividualsFromDB(tableName);
 			OntologyWriter ontWrite = new OntologyWriter(); //IRI.create(owlFile.toURI()));
 			ontWrite.writeClasses(classes, IRI.create(owlFile.toURI()),
 					IRI.create(ontologyIRI));
 			ontWrite.writeIndividuals(individuals, IRI.create(owlFile.toURI()));
 			//ontWrite.writeRules(rules, IRI.create(owlFile.toURI()));
-			CSVToOWLRulesConverter therules = new CSVToOWLRulesConverter(fileDir, IRI.create(owlFile.toURI()), 3); // 3 rules
+			CSVToOWLRulesConverter therules = new CSVToOWLRulesConverter(fileDir, IRI.create(owlFile.toURI()), 2); // 3 rules
 			defaultDict<String, List<OWLClassExpression>> rules = therules.CSVRulesConverter();
 			ontWrite.writeAll(classes, individuals, rules, IRI.create(owlFile.toURI()), IRI.create(ontologyIRI));
 			
@@ -65,7 +65,11 @@ public class DBToOWLIndividualConverter {
 
 	}
 
-	public LinkedHashSet<OntologyClass> createClassesfromDB(String tableName)
+	public LinkedHashSet<OntologyClass> createClassesfromDB(String tableName) throws IOException, SQLException{
+		return createClassesfromDB(tableName, "wetness");
+	}
+
+	public LinkedHashSet<OntologyClass> createClassesfromDB(String tableName, String colName)
 			throws IOException, SQLException {
 		/* Read from DB */
 		String url = "jdbc:postgresql://localhost/RLP?user=postgres&password=BobtheBuilder";
@@ -75,15 +79,24 @@ public class DBToOWLIndividualConverter {
 		try {
 			db = DriverManager.getConnection(url);
 			st = db.createStatement();
-			ResultSet rs = st.executeQuery("SELECT wetness FROM " + tableName); // rlp_all_small
+			ResultSet rs = st.executeQuery("SELECT DISTINCT(" + colName + ") FROM " + tableName); // rlp_all_small
 			while (rs.next()) {
 				OntologyClass eunisObj = new OntologyClass();
-				String parameter = rs.getString("wetness");
-				if (eunisClasses.contains(eunisObj.getName()) == false) {
+				String parameter = rs.getString(colName);
+				if (parameter.contains("/")){
+						parameter = parameter.split("/")[1];
+				}
+				//if (eunisClasses.contains(eunisObj.getName()) == false) {
 					eunisObj.setName(parameter);
 					eunisClasses.add(eunisObj);
-				}
+					System.out.println("Added: " + parameter);
+				//}
 			}
+			String entries = "";
+			for (OntologyClass c: eunisClasses){
+				entries += c.getName() + " ";
+			}
+			System.out.println(entries);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} finally {
@@ -113,13 +126,9 @@ public class DBToOWLIndividualConverter {
 			rs = st.executeQuery("SELECT * FROM " + tableName); // rlp_all_small
 			rsmd = rs.getMetaData();
 			int colCount = rsmd.getColumnCount();
-			if (rsmd == null || colCount == 0) {
+			if (rsmd == null || colCount == 0 || rs == null) {
 				System.out.println("ERROR: too few columns!");
 			}
-			if (rs == null) {
-				System.out.println(tableName + " is empty!!");
-			}
-
 			// System.out.println("RS size: ");
 			while (rs.next()) {
 				// System.out.println("RS");
@@ -162,6 +171,7 @@ public class DBToOWLIndividualConverter {
 		// System.out.println(fields.toString());
 		System.out.println("About to add: " + tableName + " to "
 				+ existingOWLFile);
-		test.convertDB(tableName, "c:/Users/Moran/test-rlp/wetness_10_gt100"); // , fields);
+		test.convertDB(tableName, "c:/Users/Moran/test-rlp/wetness_centroid_all", "wetness"); // , fields);
+		
 	}
 }

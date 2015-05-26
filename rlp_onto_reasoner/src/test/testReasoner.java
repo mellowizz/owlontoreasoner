@@ -88,7 +88,7 @@ public class testReasoner {
 	
 	public static void main(String[] args) {
 		OWLOntologyManager mgr = OWLManager.createOWLOntologyManager();
-		String fileName = "validation_wetness_10_gt50_new.owl";
+		String fileName = "validation_wetness_10_gt100_c_all.owl";
 		File file = new File(
 				"C:\\Users\\Moran\\ontologies\\" + fileName);
 		String tableName;
@@ -114,7 +114,7 @@ public class testReasoner {
 			classList.add("dry");
 			/*classList.add("moist");*/
 			classList.add("mesic");
-			classList.add("wet");
+			classList.add("very");
 			/*classList.add("waterlogged");
 			classList.add("periodic_flooding");
 			classList.add("riparian");
@@ -128,7 +128,7 @@ public class testReasoner {
 				
 				String currClass = c.getIRI().getFragment();			
 				System.out.println("current class: " + currClass);
-				//if (classList.contains(currClass)) {
+				if (classList.contains(currClass)) {
 					NodeSet<OWLNamedIndividual> instances = factplusplus
 							.getInstances(c, false);
 					System.out.println("current class: " + currClass + " isEmpty? " + instances.isEmpty());
@@ -138,9 +138,7 @@ public class testReasoner {
 					}
 					System.out.println("Total: "
 							+ instances.getFlattened().size());
-				//} else{
-				//	continue;
-				//}
+				}
 			}
 			for (ArrayList<String> clazz: classesHash.values()){
 				System.out.println(clazz.toString());
@@ -148,7 +146,7 @@ public class testReasoner {
 			}
 			/* write results to DB */
 			//String originalDataTable = "rlp_eunis_all_parameters";
-			String validationTable = "validation_wetness_10_gt50";
+			String validationTable = "validation_wetness_10_gt100_c_all";
 			String resultsTable = validationTable + "_results";
 			createTable(dict, resultsTable, validationTable); 
 		} catch (OWLOntologyCreationException e) {
