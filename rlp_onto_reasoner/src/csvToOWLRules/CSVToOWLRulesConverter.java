@@ -53,6 +53,7 @@ public class CSVToOWLRulesConverter {
 				int lineNum = 1;
 				OWLDatatypeRestriction newRestriction = null;
 				OWLDataProperty hasParameter = null;
+				OWLDatatypeRestriction newRestrictionOpp = null;
 				/* could make MAX_EXCLUSIVE set by if/else than emit right code */
 				while ((nextLine = reader.readNext()) != null
 						&& lineNum <= this.numRules) {
@@ -68,8 +69,14 @@ public class CSVToOWLRulesConverter {
 							newRestriction = factory
 									.getOWLDatatypeMaxExclusiveRestriction(Double
 											.parseDouble(threshold));
+							newRestrictionOpp = factory
+									.getOWLDatatypeMinExclusiveRestriction(Double
+											.parseDouble(threshold));
 						} else if (direction.equals(">")) {
 							newRestriction = factory
+									.getOWLDatatypeMinExclusiveRestriction(Double
+											.parseDouble(threshold));
+							newRestrictionOpp = factory
 									.getOWLDatatypeMaxExclusiveRestriction(Double
 											.parseDouble(threshold));
 						} else {
@@ -86,6 +93,11 @@ public class CSVToOWLRulesConverter {
 						OWLClassExpression newWetnessRestriction = factory
 								.getOWLDataSomeValuesFrom(hasParameter,
 										newRestriction);
+						//
+						
+						classesExpressions.get(classNames[0]).add(
+								newWetnessRestriction);
+						// add opposite rule:
 						classesExpressions.get(classNames[1]).add(
 								newWetnessRestriction);
 						lineNum++;
