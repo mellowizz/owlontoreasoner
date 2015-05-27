@@ -94,12 +94,15 @@ public class CSVToOWLRulesConverter {
 								.getOWLDataSomeValuesFrom(hasParameter,
 										newRestriction);
 						//
+						OWLClassExpression newWetnessRestrictionOpp = factory
+								.getOWLDataSomeValuesFrom(hasParameter,
+										newRestrictionOpp);
 						
 						classesExpressions.get(classNames[0]).add(
 								newWetnessRestriction);
 						// add opposite rule:
 						classesExpressions.get(classNames[1]).add(
-								newWetnessRestriction);
+								newWetnessRestrictionOpp);
 						lineNum++;
 					} catch (NullPointerException e) {
 						e.printStackTrace();
