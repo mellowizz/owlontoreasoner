@@ -107,25 +107,22 @@ public class testReasoner {
 			OWLReasoner factplusplus = new FaCTPlusPlusReasonerFactory()
 					.createReasoner(onto); 
 			System.out.println(factplusplus.getReasonerVersion());
-			factplusplus.precomputeInferences(InferenceType.CLASS_HIERARCHY);
+			/* Do I need to do this?*/
+			//factplusplus.precomputeInferences(InferenceType.CLASS_HIERARCHY);
 			HashMap<String, ArrayList<String>> classesHash = new HashMap<String, ArrayList<String>>();
 			ArrayList<String> classList = new ArrayList<String>();
 			classList.add("aquatic");
 			classList.add("dry");
 			/*classList.add("moist");*/
 			classList.add("mesic");
-			classList.add("very");
+			classList.add("very_wet");
 			/*classList.add("waterlogged");
 			classList.add("periodic_flooding");
 			classList.add("riparian");
 			classList.add("dry_or_seasonally_wet");*/
 			defaultDict<Integer, List<String>> dict = new defaultDict<Integer, List<String>>(ArrayList.class);
 			for (OWLClass c : onto.getClassesInSignature()) {
-				if (classList.isEmpty()){
-					System.out.println("class list empty!");
-					break;
-				}
-				
+				if (classList.isEmpty()){ System.out.println("class list empty!"); break;}
 				String currClass = c.getIRI().getFragment();			
 				System.out.println("current class: " + currClass);
 				if (classList.contains(currClass)) {
@@ -138,6 +135,9 @@ public class testReasoner {
 					}
 					System.out.println("Total: "
 							+ instances.getFlattened().size());
+				}
+				else{
+					continue;
 				}
 			}
 			for (ArrayList<String> clazz: classesHash.values()){

@@ -49,7 +49,7 @@ public class DBToOWLIndividualConverter {
 					IRI.create(ontologyIRI));
 			ontWrite.writeIndividuals(individuals, IRI.create(owlFile.toURI()));
 			//ontWrite.writeRules(rules, IRI.create(owlFile.toURI()));
-			CSVToOWLRulesConverter therules = new CSVToOWLRulesConverter(fileDir, IRI.create(owlFile.toURI()), 2); // 3 rules
+			CSVToOWLRulesConverter therules = new CSVToOWLRulesConverter(fileDir, IRI.create(owlFile.toURI()), 3); // 3 rules
 			defaultDict<String, List<OWLClassExpression>> rules = therules.CSVRulesConverter();
 			ontWrite.writeAll(classes, individuals, rules, IRI.create(owlFile.toURI()), IRI.create(ontologyIRI));
 			

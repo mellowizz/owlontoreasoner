@@ -154,13 +154,6 @@ public class OntologyWriter {
 			OWLAxiom classAx = factory.getOWLSubClassOfAxiom(cls, wetness);
 			manager.applyChange(new AddAxiom(ontology, classAx));
 
-			// OWLAnnotation commentAnno =
-			// factory.getOWLAnnotation(factory.getRDFSComment(),
-			// factory.getOWLLiteral(EUClass.getDescription(), "en"));
-			// OWLAxiom ax =
-			// factory.getOWLAnnotationAssertionAxiom(cls.getIRI(),
-			// commentAnno);
-			// manager.applyChange(new AddAxiom(ontology, ax));
 		}
 
 		manager.saveOntology(ontology);
