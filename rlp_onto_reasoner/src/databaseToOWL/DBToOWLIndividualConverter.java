@@ -28,13 +28,13 @@ import dict.defaultDict;
 
 public class DBToOWLIndividualConverter {
 
-	public void convertDB(String tableName, String fileDir, String colName) // List<String> colNames)
+	public File convertDB(String tableName, String rulesDir, String colName, Integer numRules) // List<String> colNames)
 			throws SQLException, IOException {
 		LinkedHashSet<Individual> individuals;
 		LinkedHashSet<OntologyClass> classes;
 		//LinkedHashSet<OWLDataRangeFacetRestriction> rules;
 		File owlFile = new File("C:/Users/Moran/ontologies/" + tableName
-				+ ".owl");
+				+ "_" + numRules + "_rules.owl");
 		try {
 			// create ontology 
 			OntologyCreator ontCreate = new OntologyCreator();
@@ -49,10 +49,9 @@ public class DBToOWLIndividualConverter {
 					IRI.create(ontologyIRI));
 			ontWrite.writeIndividuals(individuals, IRI.create(owlFile.toURI()));
 			//ontWrite.writeRules(rules, IRI.create(owlFile.toURI()));
-			CSVToOWLRulesConverter therules = new CSVToOWLRulesConverter(fileDir, IRI.create(owlFile.toURI()), 3); // 3 rules
+			CSVToOWLRulesConverter therules = new CSVToOWLRulesConverter(rulesDir, IRI.create(owlFile.toURI()), numRules); // 3 rules
 			defaultDict<String, List<OWLClassExpression>> rules = therules.CSVRulesConverter();
 			ontWrite.writeAll(classes, individuals, rules, IRI.create(owlFile.toURI()), IRI.create(ontologyIRI));
-			
 		}
 
 		catch (OWLOntologyStorageException e2) {
@@ -62,7 +61,10 @@ public class DBToOWLIndividualConverter {
 		catch (OWLOntologyCreationException e) {
 			throw new RuntimeException(e.getMessage(), e);
 		}
-
+		finally{
+			System.out.println("leaving convertDB");
+		}
+		return owlFile;
 	}
 
 	public LinkedHashSet<OntologyClass> createClassesfromDB(String tableName) throws IOException, SQLException{
@@ -79,18 +81,21 @@ public class DBToOWLIndividualConverter {
 		try {
 			db = DriverManager.getConnection(url);
 			st = db.createStatement();
-			ResultSet rs = st.executeQuery("SELECT DISTINCT(" + colName + ") FROM " + tableName); // rlp_all_small
+			ResultSet rs = st.executeQuery("SELECT DISTINCT(" + colName + ") FROM " + tableName + " where " + colName + "!= ''"); // rlp_all_small
 			while (rs.next()) {
-				OntologyClass eunisObj = new OntologyClass();
 				String parameter = rs.getString(colName);
+				if (parameter == null){ continue;}
+				OntologyClass eunisObj = new OntologyClass();
+				System.out.println(colName);
+				System.out.println(parameter);
 				if (parameter.contains("/")){
 						parameter = parameter.split("/")[1];
 				}
-				//if (eunisClasses.contains(eunisObj.getName()) == false) {
+				if (eunisClasses.contains(eunisObj.getName()) == false) {
 					eunisObj.setName(parameter);
 					eunisClasses.add(eunisObj);
 					System.out.println("Added: " + parameter);
-				//}
+				}
 			}
 			String entries = "";
 			for (OntologyClass c: eunisClasses){
@@ -99,6 +104,8 @@ public class DBToOWLIndividualConverter {
 			System.out.println(entries);
 		} catch (SQLException e) {
 			e.printStackTrace();
+		} catch (NullPointerException f){
+			f.printStackTrace();
 		} finally {
 			if (st != null) {
 				st.close();
@@ -171,7 +178,7 @@ public class DBToOWLIndividualConverter {
 		// System.out.println(fields.toString());
 		System.out.println("About to add: " + tableName + " to "
 				+ existingOWLFile);
-		test.convertDB(tableName, "c:/Users/Moran/test-rlp/wetness_centroid_all", "wetness"); // , fields);
+		test.convertDB(tableName, "c:/Users/Moran/test-rlp/SEaTH/wetness_10_noaquatic", "wetness", 3); // , fields);
 		
 	}
 }

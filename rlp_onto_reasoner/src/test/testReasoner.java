@@ -85,10 +85,70 @@ public class testReasoner {
 		}
 	}
 
+	public static String classifyOWL(File fileName, String tableName, String resultsTbl){
+		OWLOntologyManager mgr = OWLManager.createOWLOntologyManager();
+		OWLOntology onto = null;
+		if (mgr == null || fileName == null) {
+			System.out.println("ERROR!!");
+		}
+		
+		HashMap<OWLClass,Set<OWLClass>> someValueFromAxioms = new HashMap<OWLClass,Set<OWLClass>>();
+
+		System.out.println("Before try");
+		try {
+			onto = mgr.loadOntologyFromOntologyDocument(fileName);
+			//OWLReasoner hermit = new Reasoner.ReasonerFactory().createReasoner(onto);
+			OWLReasoner factplusplus = new FaCTPlusPlusReasonerFactory()
+					.createReasoner(onto); 
+			System.out.println(factplusplus.getReasonerVersion());
+			/* Do I need to do this?*/
+			//factplusplus.precomputeInferences(InferenceType.CLASS_HIERARCHY);
+			HashMap<String, ArrayList<String>> classesHash = new HashMap<String, ArrayList<String>>();
+			ArrayList<String> classList = new ArrayList<String>();
+			classList.add("dry");
+			classList.add("mesic");
+			classList.add("very_wet");
+			defaultDict<Integer, List<String>> dict = new defaultDict<Integer, List<String>>(ArrayList.class);
+			for (OWLClass c : onto.getClassesInSignature())
+			{
+				if (classList.isEmpty()){ System.out.println("class list empty!"); break;}
+				String currClass = c.getIRI().getFragment();			
+				System.out.println("current class: " + currClass);
+				if (classList.contains(currClass)) {
+					NodeSet<OWLNamedIndividual> instances = factplusplus
+							.getInstances(c, false);
+					System.out.println("current class: " + currClass + " isEmpty? " + instances.isEmpty());
+					for (OWLNamedIndividual i : instances.getFlattened()) {
+						dict.get(Integer.parseInt(i.getIRI().getFragment())).add(currClass);
+						System.out.println(i.getIRI().getFragment());
+					}
+					System.out.println("Total: "
+							+ instances.getFlattened().size());
+				}
+				else{
+					continue;
+				}
+			}
+			for (ArrayList<String> clazz: classesHash.values())
+			{
+				System.out.println(clazz.toString());
+				System.out.println("Class size: " + clazz.size());
+			}
+			/* write results to DB */
+			//String originalDataTable = "rlp_eunis_all_parameters";
+			createTable(dict, resultsTbl, tableName); 
+		} catch (OWLOntologyCreationException e) {
+			e.printStackTrace();
+		} finally {
+			System.out.println("ALL DONE!");
+		}
+		return resultsTbl; 
+		
+	}
 	
 	public static void main(String[] args) {
 		OWLOntologyManager mgr = OWLManager.createOWLOntologyManager();
-		String fileName = "validation_wetness_10_gt100_c_all.owl";
+		String fileName = "wetness_Saarburg_noaquatic_3_rules.owl";
 		File file = new File(
 				"C:\\Users\\Moran\\ontologies\\" + fileName);
 		String tableName;
@@ -111,7 +171,7 @@ public class testReasoner {
 			//factplusplus.precomputeInferences(InferenceType.CLASS_HIERARCHY);
 			HashMap<String, ArrayList<String>> classesHash = new HashMap<String, ArrayList<String>>();
 			ArrayList<String> classList = new ArrayList<String>();
-			classList.add("aquatic");
+			//classList.add("aquatic");
 			classList.add("dry");
 			/*classList.add("moist");*/
 			classList.add("mesic");
@@ -146,7 +206,7 @@ public class testReasoner {
 			}
 			/* write results to DB */
 			//String originalDataTable = "rlp_eunis_all_parameters";
-			String validationTable = "validation_wetness_10_gt100_c_all";
+			String validationTable = "wetness_Saarburg_noaquatic";
 			String resultsTable = validationTable + "_results";
 			createTable(dict, resultsTable, validationTable); 
 		} catch (OWLOntologyCreationException e) {
