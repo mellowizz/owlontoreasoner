@@ -57,7 +57,10 @@ public class CSVToOWLRulesConverter {
 				/* could make MAX_EXCLUSIVE set by if/else than emit right code */
 				while ((nextLine = reader.readNext()) != null
 						&& lineNum <= this.numRules) {
-					String parameter = "has_" + nextLine[0];
+					String parameter = nextLine[0]; /* why has_?*/
+					if (parameter.equals("aquatic") || parameter.equals("dry") || parameter.equals("mesic") || parameter.equals("wet/very_wet")){
+						// do something
+					}
 					String direction = nextLine[2];
 					String threshold = nextLine[3];
 					System.out.println(parameter + " direction: " + direction
@@ -65,7 +68,15 @@ public class CSVToOWLRulesConverter {
 					hasParameter = factory.getOWLDataProperty(IRI.create("#"
 							+ parameter));
 					try {
-						if (direction.equals("<")) {
+						if (direction.equals(">=")) {
+							newRestriction = factory
+									.getOWLDatatypeMinInclusiveRestriction(Double
+											.parseDouble(threshold));
+							newRestrictionOpp = factory
+									.getOWLDatatypeMaxExclusiveRestriction(Double
+											.parseDouble(threshold));
+							
+						} else if (direction.equals("<")) {
 							newRestriction = factory
 									.getOWLDatatypeMaxExclusiveRestriction(Double
 											.parseDouble(threshold));
@@ -101,8 +112,8 @@ public class CSVToOWLRulesConverter {
 						classesExpressions.get(classNames[0]).add(
 								newWetnessRestriction);
 						// add opposite rule:
-						classesExpressions.get(classNames[1]).add(
-								newWetnessRestrictionOpp);
+						//classesExpressions.get(classNames[1]).add(
+						//		newWetnessRestrictionOpp);
 						lineNum++;
 					} catch (NullPointerException e) {
 						e.printStackTrace();
