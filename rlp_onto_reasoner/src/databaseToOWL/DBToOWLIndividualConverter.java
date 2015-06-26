@@ -23,6 +23,7 @@ import owlAPI.Individual;
 import owlAPI.OntologyClass;
 import owlAPI.OntologyCreator;
 import owlAPI.OntologyWriter;
+import csvToOWLRules.CSVToOWLRules;
 import csvToOWLRules.CSVToOWLRulesConverter;
 import dict.defaultDict;
 
@@ -34,7 +35,7 @@ public class DBToOWLIndividualConverter {
 		LinkedHashSet<OntologyClass> classes;
 		//LinkedHashSet<OWLDataRangeFacetRestriction> rules;
 		File owlFile = new File("C:/Users/Moran/ontologies/" + tableName
-				+ "_" + numRules + "_rules.owl");
+				+ "_" + numRules + "_DT_rules.owl");
 		try {
 			// create ontology 
 			OntologyCreator ontCreate = new OntologyCreator();
@@ -44,13 +45,16 @@ public class DBToOWLIndividualConverter {
 			/* get classes and individuals */
 			classes = createClassesfromDB(tableName, colName);
 			individuals = createIndividualsFromDB(tableName);
+			System.out.println("# of classes: " + classes.size() + " # of individuals : " + individuals.size());
 			OntologyWriter ontWrite = new OntologyWriter(); //IRI.create(owlFile.toURI()));
-			ontWrite.writeClasses(classes, IRI.create(owlFile.toURI()),
-					IRI.create(ontologyIRI));
-			ontWrite.writeIndividuals(individuals, IRI.create(owlFile.toURI()));
+			//ontWrite.writeClasses(classes, IRI.create(owlFile.toURI()),
+			//		IRI.create(ontologyIRI));
+			//ontWrite.writeIndividuals(individuals, IRI.create(owlFile.toURI()));
 			//ontWrite.writeRules(rules, IRI.create(owlFile.toURI()));
-			CSVToOWLRulesConverter therules = new CSVToOWLRulesConverter(rulesDir, IRI.create(owlFile.toURI()), numRules); // 3 rules
-			defaultDict<String, List<OWLClassExpression>> rules = therules.CSVRulesConverter();
+			//CSVToOWLRulesConverter therules = new CSVToOWLRulesConverter(rulesDir, IRI.create(owlFile.toURI()), numRules); // 3 rules
+			CSVToOWLRules therules = new CSVToOWLRules(rulesDir, IRI.create(owlFile.toURI()), numRules); // 3 rules
+			//defaultDict<String, List<OWLClassExpression>> rules = therules.CSVRulesConverter();
+			defaultDict<String, List<OWLClassExpression>> rules = therules.CSVRules();
 			ontWrite.writeAll(classes, individuals, rules, IRI.create(owlFile.toURI()), IRI.create(ontologyIRI));
 		}
 
@@ -86,8 +90,8 @@ public class DBToOWLIndividualConverter {
 				String parameter = rs.getString(colName);
 				if (parameter == null){ continue;}
 				OntologyClass eunisObj = new OntologyClass();
-				System.out.println(colName);
-				System.out.println(parameter);
+				//System.out.println(colName);
+				///System.out.println(parameter);
 				if (parameter.contains("/")){
 						parameter = parameter.split("/")[1];
 				}
@@ -150,14 +154,14 @@ public class DBToOWLIndividualConverter {
 						continue;
 					}
 					values.add(rs.getDouble(colName));
-					DataPropertyNames.add("has_" + colName);
+					DataPropertyNames.add(colName); //has_
 				}
 				individual.setFID(rs.getInt("ogc_fid"));
 				individual.setValues(values);
 				individual.setDataPropertyNames(DataPropertyNames);
 				// add to individuals
 				individuals.add(individual);
-				// System.out.println(individual.getDataPropertyNames() + " : "
+				//System.out.println(individual.getDataPropertyNames() + " : "
 				// + individual.getValues());
 			}
 		} catch (SQLException e) {
