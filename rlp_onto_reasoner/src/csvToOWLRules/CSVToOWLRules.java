@@ -70,6 +70,8 @@ public class CSVToOWLRules {
                 continue;
             }
             try {
+            	/* bug!! */
+            	parameter = "has_" + parameter;
                 String direction = nextLine[1];
                 String threshold = nextLine[2];
                 System.out.println(parameter + " direction: " + direction

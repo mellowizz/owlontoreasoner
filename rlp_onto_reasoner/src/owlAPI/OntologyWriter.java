@@ -71,7 +71,7 @@ public class OntologyWriter {
 
 		OWLClass wetness = factory.getOWLClass(IRI.create(ontologyIRI
 				+ "#wetness"));
-		;
+		
 		for (OntologyClass EUClass : classes) {
 			OWLClass cls = factory.getOWLClass(IRI.create(ontologyIRI + "#"
 					+ EUClass.getName()));
@@ -81,6 +81,7 @@ public class OntologyWriter {
 			manager.applyChange(new AddAxiom(ontology, classAx));
 			manager.applyChange(new AddAxiom(ontology, wetnessAx));
 		}
+		
 
 		System.out.println("# of individuals: " + individuals.size());
 
@@ -94,21 +95,24 @@ public class OntologyWriter {
 				OWLDataProperty dataProp = factory.getOWLDataProperty("#"
 						+ ind.getDataPropertyNames().get(index), pm);
 
-				OWLDatatype integerDatatype = factory
+				OWLDatatype doubleDatatype = factory
 						.getOWLDatatype(OWL2Datatype.XSD_DOUBLE.getIRI());
 
 				OWLLiteral literal = factory.getOWLLiteral(value.toString(),
-						integerDatatype);
+						doubleDatatype);
 
 				OWLDataPropertyAssertionAxiom dataPropertyAssertion = factory
 						.getOWLDataPropertyAssertionAxiom(dataProp, obj,
 								literal);
 
-				manager.addAxiom(ontology, dataPropertyAssertion);
-
+				//manager.addAxiom(ontology, dataPropertyAssertion);
+				//System.out.println("Data property assertion:" + dataPropertyAssertion.toString() );
+				
+				manager.applyChange(new AddAxiom(ontology, dataPropertyAssertion));
 				index = index + 1;
 			}
 		}
+		
 		OWLObjectIntersectionOf intersection = null;
 		OWLClass owlCls = null;
 		for (Entry<String, List<OWLClassExpression>> entry : classesExpressions.entrySet()) {
@@ -145,7 +149,6 @@ public class OntologyWriter {
 		manager.addIRIMapper(mapper);
 		OWLClass wetness = factory.getOWLClass(IRI.create(ontologyIRI
 				+ "#wetness"));
-		;
 		// manager.applyChange(new AddAxiom(ontology, wetnessThing));
 		for (OntologyClass EUClass : classes) {
 			OWLClass cls = factory.getOWLClass(IRI.create(ontologyIRI + "#"

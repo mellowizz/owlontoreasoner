@@ -154,7 +154,7 @@ public class DBToOWLIndividualConverter {
 						continue;
 					}
 					values.add(rs.getDouble(colName));
-					DataPropertyNames.add(colName); //has_
+					DataPropertyNames.add("has_" + colName); //has_
 				}
 				individual.setFID(rs.getInt("ogc_fid"));
 				individual.setValues(values);

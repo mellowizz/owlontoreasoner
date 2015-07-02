@@ -1,6 +1,7 @@
 package test;
 
 import dict.defaultDict;
+
 import com.google.common.base.Joiner;
 
 import java.io.File;
@@ -17,7 +18,9 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import rlpUtils.RLPUtils;
 import uk.ac.manchester.cs.factplusplus.owlapiv3.FaCTPlusPlusReasonerFactory;
+
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLNamedIndividual;
@@ -85,7 +88,7 @@ public class testReasoner {
 		}
 	}
 
-	public static String classifyOWL(File fileName, String tableName, String resultsTbl){
+	public static String classifyOWL(File fileName, String tableName, String resultsTbl) throws SQLException{
 		OWLOntologyManager mgr = OWLManager.createOWLOntologyManager();
 		OWLOntology onto = null;
 		if (mgr == null || fileName == null) {
@@ -104,10 +107,8 @@ public class testReasoner {
 			/* Do I need to do this?*/
 			//factplusplus.precomputeInferences(InferenceType.CLASS_HIERARCHY);
 			HashMap<String, ArrayList<String>> classesHash = new HashMap<String, ArrayList<String>>();
-			ArrayList<String> classList = new ArrayList<String>();
-			classList.add("dry");
-			classList.add("mesic");
-			classList.add("very_wet");
+			
+			ArrayList<String> classList = RLPUtils.getDistinctValuesFromTbl(tableName, "wetness");
 			defaultDict<Integer, List<String>> dict = new defaultDict<Integer, List<String>>(ArrayList.class);
 			for (OWLClass c : onto.getClassesInSignature())
 			{
@@ -145,8 +146,8 @@ public class testReasoner {
 		return resultsTbl; 
 		
 	}
-	
-	public static void main(String[] args) {
+	/* no longer used */
+	public static void main(String[] args) throws SQLException {
 		OWLOntologyManager mgr = OWLManager.createOWLOntologyManager();
 		String fileName = "wetness_Saarburg_noaquatic_3_rules.owl";
 		File file = new File(
@@ -170,16 +171,7 @@ public class testReasoner {
 			/* Do I need to do this?*/
 			//factplusplus.precomputeInferences(InferenceType.CLASS_HIERARCHY);
 			HashMap<String, ArrayList<String>> classesHash = new HashMap<String, ArrayList<String>>();
-			ArrayList<String> classList = new ArrayList<String>();
-			//classList.add("aquatic");
-			classList.add("dry");
-			/*classList.add("moist");*/
-			classList.add("mesic");
-			classList.add("very_wet");
-			/*classList.add("waterlogged");
-			classList.add("periodic_flooding");
-			classList.add("riparian");
-			classList.add("dry_or_seasonally_wet");*/
+			ArrayList<String> classList = RLPUtils.getDistinctValuesFromTbl(tableName, "wetness");
 			defaultDict<Integer, List<String>> dict = new defaultDict<Integer, List<String>>(ArrayList.class);
 			for (OWLClass c : onto.getClassesInSignature()) {
 				if (classList.isEmpty()){ System.out.println("class list empty!"); break;}
