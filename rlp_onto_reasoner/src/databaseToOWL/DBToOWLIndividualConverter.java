@@ -35,7 +35,7 @@ public class DBToOWLIndividualConverter {
 		LinkedHashSet<OntologyClass> classes;
 		//LinkedHashSet<OWLDataRangeFacetRestriction> rules;
 		File owlFile = new File("C:/Users/Moran/ontologies/" + tableName
-				+ "_" + numRules + "_DT_rules.owl");
+				+ "_" + numRules + "_SEaTH_rules.owl");
 		try {
 			// create ontology 
 			OntologyCreator ontCreate = new OntologyCreator();
@@ -51,10 +51,10 @@ public class DBToOWLIndividualConverter {
 			//		IRI.create(ontologyIRI));
 			//ontWrite.writeIndividuals(individuals, IRI.create(owlFile.toURI()));
 			//ontWrite.writeRules(rules, IRI.create(owlFile.toURI()));
-			//CSVToOWLRulesConverter therules = new CSVToOWLRulesConverter(rulesDir, IRI.create(owlFile.toURI()), numRules); // 3 rules
-			CSVToOWLRules therules = new CSVToOWLRules(rulesDir, IRI.create(owlFile.toURI()), numRules); // 3 rules
-			//defaultDict<String, List<OWLClassExpression>> rules = therules.CSVRulesConverter();
-			defaultDict<String, List<OWLClassExpression>> rules = therules.CSVRules();
+			CSVToOWLRulesConverter therules = new CSVToOWLRulesConverter(rulesDir, IRI.create(owlFile.toURI()), numRules); // 3 rules
+			//CSVToOWLRules therules = new CSVToOWLRules(rulesDir, IRI.create(owlFile.toURI()), numRules); // 3 rules
+			defaultDict<String, List<OWLClassExpression>> rules = therules.CSVRulesConverter();
+			//defaultDict<String, List<OWLClassExpression>> rules = therules.CSVRules();
 			ontWrite.writeAll(classes, individuals, rules, IRI.create(owlFile.toURI()), IRI.create(ontologyIRI));
 		}
 
@@ -85,12 +85,12 @@ public class DBToOWLIndividualConverter {
 		try {
 			db = DriverManager.getConnection(url);
 			st = db.createStatement();
-			ResultSet rs = st.executeQuery("SELECT DISTINCT(" + colName + ") FROM " + tableName + " where " + colName + "!= ''"); // rlp_all_small
+			ResultSet rs = st.executeQuery("SELECT DISTINCT(" + colName + ") FROM " + tableName); // + " where " + colName + "!= ''"); // rlp_all_small
 			while (rs.next()) {
 				String parameter = rs.getString(colName);
 				if (parameter == null){ continue;}
 				OntologyClass eunisObj = new OntologyClass();
-				//System.out.println(colName);
+				System.out.println(colName);
 				///System.out.println(parameter);
 				if (parameter.contains("/")){
 						parameter = parameter.split("/")[1];

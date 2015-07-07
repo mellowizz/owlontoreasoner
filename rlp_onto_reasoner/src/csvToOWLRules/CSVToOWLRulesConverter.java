@@ -4,9 +4,13 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+
 import javax.swing.filechooser.FileNameExtensionFilter;
+
 import com.opencsv.CSVReader;
+
 import org.apache.commons.io.FilenameUtils;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.IRI;
@@ -16,6 +20,7 @@ import org.semanticweb.owlapi.model.OWLDataProperty;
 import org.semanticweb.owlapi.model.OWLDatatypeRestriction;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
+
 import dict.defaultDict;
 
 public class CSVToOWLRulesConverter {
@@ -44,6 +49,7 @@ public class CSVToOWLRulesConverter {
 		for (final File csvFile : file.listFiles()) {
 			if (extensionFilter.accept(csvFile)) {
 				reader = new CSVReader(new FileReader(csvFile));
+				//List<String> classNames = Arrays.asList("aquatic", "dry", "mesic", "very_wet"); 
 				String fileNameNoExt = FilenameUtils.removeExtension(csvFile
 						.getName());
 				String[] classNames = fileNameNoExt.split("-");
@@ -57,45 +63,67 @@ public class CSVToOWLRulesConverter {
 				/* could make MAX_EXCLUSIVE set by if/else than emit right code */
 				while ((nextLine = reader.readNext()) != null
 						&& lineNum <= this.numRules) {
-					String parameter = nextLine[0]; /* why has_?*/
-					if (parameter.equals("aquatic") || parameter.equals("dry") || parameter.equals("mesic") || parameter.equals("wet/very_wet")){
+					String parameter = nextLine[0]; /* why has_? */
+					if (parameter.equals("aquatic") || parameter.equals("dry")
+							|| parameter.equals("mesic")
+							|| parameter.equals("very_wet")) {
+						System.out.println("saw wetness");
 						// do something
+						//System.out.println("adding: " + parameter + " rules");
+						//classesExpressions.get(parameter).addAll(rulesList);
+						continue;
 					}
-					String direction = nextLine[2];
-					String threshold = nextLine[3];
-					System.out.println(parameter + " direction: " + direction
-							+ " threshold: " + threshold);
-					hasParameter = factory.getOWLDataProperty(IRI.create("#"
-							+ parameter));
 					try {
-						if (direction.equals(">=")) {
-							newRestriction = factory
-									.getOWLDatatypeMinInclusiveRestriction(Double
-											.parseDouble(threshold));
-							newRestrictionOpp = factory
-									.getOWLDatatypeMaxExclusiveRestriction(Double
-											.parseDouble(threshold));
-							
-						} else if (direction.equals("<")) {
-							newRestriction = factory
-									.getOWLDatatypeMaxExclusiveRestriction(Double
-											.parseDouble(threshold));
-							newRestrictionOpp = factory
-									.getOWLDatatypeMinExclusiveRestriction(Double
-											.parseDouble(threshold));
-						} else if (direction.equals(">")) {
-							newRestriction = factory
-									.getOWLDatatypeMinExclusiveRestriction(Double
-											.parseDouble(threshold));
-							newRestrictionOpp = factory
-									.getOWLDatatypeMaxExclusiveRestriction(Double
-											.parseDouble(threshold));
-						} else {
-							System.out
-									.println("DID NOT FIND > or < in CSV file: "
-											+ csvFile.getName());
-						}
+                        parameter = "has_" + parameter;
+                        String direction = nextLine[2];
+                        String threshold = nextLine[3];
+                        System.out.println(parameter + " direction: " + direction
+                                + " threshold: " + threshold);
+                        hasParameter = factory.getOWLDataProperty(IRI.create("#"
+                                + parameter));
+						switch (direction) {
+                            case ">=":
+                                newRestriction = factory
+                                        .getOWLDatatypeMinInclusiveRestriction(Double
+                                                .parseDouble(threshold));
+                                newRestrictionOpp = factory
+                                        .getOWLDatatypeMaxExclusiveRestriction(Double
+                                                .parseDouble(threshold));
+                                break;
+                            case "<=":
+                                newRestriction = factory
+                                        .getOWLDatatypeMaxInclusiveRestriction(Double
+                                                .parseDouble(threshold));
+                                
+                                newRestrictionOpp = factory
+                                        .getOWLDatatypeMinExclusiveRestriction(Double
+                                                .parseDouble(threshold));
+                                break;
 
+                            case "<":
+                                newRestriction = factory
+                                        .getOWLDatatypeMaxExclusiveRestriction(Double
+                                                .parseDouble(threshold));
+                                
+                                newRestrictionOpp = factory
+                                        .getOWLDatatypeMinExclusiveRestriction(Double
+                                                .parseDouble(threshold));
+                                break;
+                            case ">":
+                                newRestriction = factory
+                                        .getOWLDatatypeMinExclusiveRestriction(Double
+                                                .parseDouble(threshold));
+                                
+                                newRestrictionOpp = factory
+                                        .getOWLDatatypeMaxExclusiveRestriction(Double
+                                                .parseDouble(threshold));
+                                break;
+                            default:
+                                System.out
+                                        .println("DID NOT FIND > or < in CSV file: "
+                                                + csvFile.getName());
+                                break;
+                        }
 						if (newRestriction == null || hasParameter == null) {
 							System.out.println("Something went wrong!!");
 							continue;
@@ -108,12 +136,12 @@ public class CSVToOWLRulesConverter {
 						OWLClassExpression newWetnessRestrictionOpp = factory
 								.getOWLDataSomeValuesFrom(hasParameter,
 										newRestrictionOpp);
-						
+
 						classesExpressions.get(classNames[0]).add(
 								newWetnessRestriction);
 						// add opposite rule:
-						//classesExpressions.get(classNames[1]).add(
-						//		newWetnessRestrictionOpp);
+						classesExpressions.get(classNames[1]).add(
+								newWetnessRestrictionOpp);
 						lineNum++;
 					} catch (NullPointerException e) {
 						e.printStackTrace();
