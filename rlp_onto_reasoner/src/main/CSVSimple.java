@@ -11,14 +11,14 @@ public class CSVSimple {
     public static void main(String[] args) throws SQLException, IOException{
         DBToOWLIndividualConverter test = new DBToOWLIndividualConverter();
         // table to classify on
-        String tableName = "saarburg_wetness_all_gt20_300testing"; //args[0];
+        String tableName = "saarburg_train"; //args[0];
         // SEaTH rules to use
-        String rule = "c:/Users/Moran/test-rlp/scikit-learn_rules/short_rules.csv";
+        String rule = "c:/Users/Moran/test-rlp/scikit-learn_rules/saarburg_train.csv";
         // number of rules to use
-        int numRules = 3;	
+        int numRules = 10;	
         //System.out.println("About to create OWL file from table: " + tableName);
-        File owlFile = test.convertDB(tableName, rule, "wetness", numRules); // , fields);
-        //File owlFile = new File("C:/Users/Moran/ontologies/wetness_gt0_80pct_validation_8_DT_rules.owl");
+        //File owlFile = test.convertDB(tableName, rule, "DT", numRules); // , fields);
+        File owlFile = new File("C:/Users/Moran/ontologies/saarburg_train_10DT_rules.owl");
         String resultsTbl = owlFile.getName();
         System.out.println(resultsTbl);
         resultsTbl = resultsTbl.substring(0, resultsTbl.lastIndexOf("."));
@@ -29,7 +29,7 @@ public class CSVSimple {
             System.out.println("returned table and results table mismatch!");
         }
         System.out.println("results located in: " + returnTbl);
-       
+       	
         /*
         List<String> command = new ArrayList<String>();
     

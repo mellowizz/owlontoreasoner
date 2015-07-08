@@ -140,8 +140,8 @@ public class CSVToOWLRulesConverter {
 						classesExpressions.get(classNames[0]).add(
 								newWetnessRestriction);
 						// add opposite rule:
-						classesExpressions.get(classNames[1]).add(
-								newWetnessRestrictionOpp);
+						//classesExpressions.get(classNames[1]).add(
+						//		newWetnessRestrictionOpp);
 						lineNum++;
 					} catch (NullPointerException e) {
 						e.printStackTrace();

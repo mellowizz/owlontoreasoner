@@ -29,13 +29,17 @@ import dict.defaultDict;
 
 public class DBToOWLIndividualConverter {
 
-	public File convertDB(String tableName, String rulesDir, String colName, Integer numRules) // List<String> colNames)
+	public File convertDB(String tableName, String rulesDir, String algorithm, Integer numRules) throws SQLException, IOException{
+	 return convertDB(tableName, rulesDir, algorithm, numRules, "wetness");
+	}
+	
+	public File convertDB(String tableName, String rulesDir, String algorithm, Integer numRules, String colName) // List<String> colNames)
 			throws SQLException, IOException {
 		LinkedHashSet<Individual> individuals;
 		LinkedHashSet<OntologyClass> classes;
 		//LinkedHashSet<OWLDataRangeFacetRestriction> rules;
 		File owlFile = new File("C:/Users/Moran/ontologies/" + tableName
-				+ "_" + numRules + "_SEaTH_rules.owl");
+				+ "_" + numRules + algorithm +"noOpp_rules.owl");
 		try {
 			// create ontology 
 			OntologyCreator ontCreate = new OntologyCreator();
@@ -47,10 +51,6 @@ public class DBToOWLIndividualConverter {
 			individuals = createIndividualsFromDB(tableName);
 			System.out.println("# of classes: " + classes.size() + " # of individuals : " + individuals.size());
 			OntologyWriter ontWrite = new OntologyWriter(); //IRI.create(owlFile.toURI()));
-			//ontWrite.writeClasses(classes, IRI.create(owlFile.toURI()),
-			//		IRI.create(ontologyIRI));
-			//ontWrite.writeIndividuals(individuals, IRI.create(owlFile.toURI()));
-			//ontWrite.writeRules(rules, IRI.create(owlFile.toURI()));
 			CSVToOWLRulesConverter therules = new CSVToOWLRulesConverter(rulesDir, IRI.create(owlFile.toURI()), numRules); // 3 rules
 			//CSVToOWLRules therules = new CSVToOWLRules(rulesDir, IRI.create(owlFile.toURI()), numRules); // 3 rules
 			defaultDict<String, List<OWLClassExpression>> rules = therules.CSVRulesConverter();
@@ -172,17 +172,5 @@ public class DBToOWLIndividualConverter {
 			}
 		}
 		return individuals;
-	}
-
-	public static void main(String[] args) throws SQLException, IOException {
-		DBToOWLIndividualConverter test = new DBToOWLIndividualConverter();
-
-		String tableName = args[0];
-		File existingOWLFile = new File(args[1]);
-		// System.out.println(fields.toString());
-		System.out.println("About to add: " + tableName + " to "
-				+ existingOWLFile);
-		test.convertDB(tableName, "c:/Users/Moran/test-rlp/SEaTH/wetness_10_noaquatic", "wetness", 3); // , fields);
-		
 	}
 }
