@@ -18,22 +18,24 @@ public class Main {
 		// SEaTH rules to use
 		String rulesDir = "c:/Users/Moran/test-rlp/SEaTH/reduced"; // names are reversed
 		// DT rule to use.
-        String rule = "c:/Users/Moran/test-rlp/scikit-learn_rules/argmin_DT_3_rules.csv";
+        String rule = "c:/Users/Moran/test-rlp/WEKA/PART_reduced_51.csv";
+        //argmin_DT_3_rules.csv";
 		// number of rules to use
-		int numRules = 1;	
+		int numRules = 51;	
 		//System.out.println("About to create OWL file from table: " + tableName);
-		File owlFile = test.convertDB(tableName, rulesDir, "SEaTH", numRules); // , fields);
+		File owlFile = test.convertDB(tableName, rule, "PART", numRules); // , fields);
 		//File owlFile = new File("C:/Users/Moran/ontologies/wetness_gt20_450_validation_1_rules.owl");
 		String resultsTbl = owlFile.getName();
 		resultsTbl = resultsTbl.substring(0, resultsTbl.lastIndexOf("."));
 		resultsTbl = resultsTbl + "_results";
 		System.out.println("successfully created: " + owlFile + " from " + tableName);
+		/*
 		String returnTbl = testReasoner.classifyOWL(owlFile, tableName, resultsTbl);
 		if (returnTbl != resultsTbl){
 			System.out.println("returned table and results table mismatch!");
 		}
 		System.out.println("results located in: " + returnTbl);
-		/*
+		
 		List<String> command = new ArrayList<String>();
 	
 		ProcessBuilder pb = new ProcessBuilder(command);
