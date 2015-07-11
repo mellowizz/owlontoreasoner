@@ -3,6 +3,7 @@ package databaseToOWL;
 import java.util.List;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -29,19 +30,21 @@ import dict.defaultDict;
 
 public class DBToOWLIndividualConverter {
 
-	public File convertDB(String tableName, String rulesDir, String algorithm, Integer numRules) throws SQLException, IOException{
-	 return convertDB(tableName, rulesDir, algorithm, numRules, "wetness");
+	public File convertDB(String tableName, String rulesDir, String algorithm,
+			Integer numRules) throws SQLException, IOException {
+		return convertDB(tableName, rulesDir, algorithm, numRules, "wetness");
 	}
-	
-	public File convertDB(String tableName, String rulesDir, String algorithm, Integer numRules, String colName) // List<String> colNames)
+
+	public File convertDB(String tableName, String rulesDir, String algorithm,
+			Integer numRules, String colName) // List<String> colNames)
 			throws SQLException, IOException {
 		LinkedHashSet<Individual> individuals;
 		LinkedHashSet<OntologyClass> classes;
-		//LinkedHashSet<OWLDataRangeFacetRestriction> rules;
-		File owlFile = new File("C:/Users/Moran/ontologies/" + tableName
-				+ "_" + numRules + algorithm +"noOpp_rules.owl");
+		// LinkedHashSet<OWLDataRangeFacetRestriction> rules;
+		File owlFile = new File("C:/Users/Moran/ontologies/" + tableName + "_"
+				+ numRules + algorithm + "_rules.owl");
 		try {
-			// create ontology 
+			// create ontology
 			OntologyCreator ontCreate = new OntologyCreator();
 			String ontologyIRI = "http://www.user.tu-berlin.de/niklasmoran/EUNIS/"
 					+ owlFile.getName().trim();
@@ -49,34 +52,43 @@ public class DBToOWLIndividualConverter {
 			/* get classes and individuals */
 			classes = createClassesfromDB(tableName, colName);
 			individuals = createIndividualsFromDB(tableName);
-			System.out.println("# of classes: " + classes.size() + " # of individuals : " + individuals.size());
-			OntologyWriter ontWrite = new OntologyWriter(); //IRI.create(owlFile.toURI()));
-			CSVToOWLRulesConverter therules = new CSVToOWLRulesConverter(rulesDir, IRI.create(owlFile.toURI()), numRules); // 3 rules
-			//CSVToOWLRules therules = new CSVToOWLRules(rulesDir, IRI.create(owlFile.toURI()), numRules); // 3 rules
-			defaultDict<String, List<OWLClassExpression>> rules = therules.CSVRulesConverter();
-			//defaultDict<String, List<OWLClassExpression>> rules = therules.CSVRules();
-			ontWrite.writeAll(classes, individuals, rules, IRI.create(owlFile.toURI()), IRI.create(ontologyIRI));
+			System.out.println("# of classes: " + classes.size()
+					+ " # of individuals : " + individuals.size());
+			OntologyWriter ontWrite = new OntologyWriter(); // IRI.create(owlFile.toURI()));
+			File file = new File(rulesDir);
+			/* TODO: cleanup! */
+			defaultDict<String, List<OWLClassExpression>> rules = null;
+			if (file.isFile()) {
+				CSVToOWLRules therules = new CSVToOWLRules(rulesDir,
+						IRI.create(owlFile.toURI()), numRules);
+				rules = therules.CSVRules();
+			} else {
+				CSVToOWLRulesConverter therules = new CSVToOWLRulesConverter(
+						rulesDir, IRI.create(owlFile.toURI()), numRules);
+				rules = therules.CSVRulesConverter();
+			}
+			ontWrite.writeAll(classes, individuals, rules,
+					IRI.create(owlFile.toURI()), IRI.create(ontologyIRI));
 		}
-
 		catch (OWLOntologyStorageException e2) {
 			throw new RuntimeException(e2.getMessage(), e2);
 		}
 
 		catch (OWLOntologyCreationException e) {
 			throw new RuntimeException(e.getMessage(), e);
-		}
-		finally{
+		} finally {
 			System.out.println("leaving convertDB");
 		}
 		return owlFile;
 	}
 
-	public LinkedHashSet<OntologyClass> createClassesfromDB(String tableName) throws IOException, SQLException{
+	public LinkedHashSet<OntologyClass> createClassesfromDB(String tableName)
+			throws IOException, SQLException {
 		return createClassesfromDB(tableName, "wetness");
 	}
 
-	public LinkedHashSet<OntologyClass> createClassesfromDB(String tableName, String colName)
-			throws IOException, SQLException {
+	public LinkedHashSet<OntologyClass> createClassesfromDB(String tableName,
+			String colName) throws IOException, SQLException {
 		/* Read from DB */
 		String url = "jdbc:postgresql://localhost/RLP?user=postgres&password=BobtheBuilder";
 		Statement st = null;
@@ -85,15 +97,19 @@ public class DBToOWLIndividualConverter {
 		try {
 			db = DriverManager.getConnection(url);
 			st = db.createStatement();
-			ResultSet rs = st.executeQuery("SELECT DISTINCT(" + colName + ") FROM " + tableName); // + " where " + colName + "!= ''"); // rlp_all_small
+			ResultSet rs = st.executeQuery("SELECT DISTINCT(" + colName
+					+ ") FROM " + tableName); // + " where " + colName +
+												// "!= ''"); // rlp_all_small
 			while (rs.next()) {
 				String parameter = rs.getString(colName);
-				if (parameter == null){ continue;}
+				if (parameter == null) {
+					continue;
+				}
 				OntologyClass eunisObj = new OntologyClass();
 				System.out.println(colName);
-				///System.out.println(parameter);
-				if (parameter.contains("/")){
-						parameter = parameter.split("/")[1];
+				// /System.out.println(parameter);
+				if (parameter.contains("/")) {
+					parameter = parameter.split("/")[1];
 				}
 				if (eunisClasses.contains(eunisObj.getName()) == false) {
 					eunisObj.setName(parameter);
@@ -102,13 +118,13 @@ public class DBToOWLIndividualConverter {
 				}
 			}
 			String entries = "";
-			for (OntologyClass c: eunisClasses){
+			for (OntologyClass c : eunisClasses) {
 				entries += c.getName() + " ";
 			}
 			System.out.println(entries);
 		} catch (SQLException e) {
 			e.printStackTrace();
-		} catch (NullPointerException f){
+		} catch (NullPointerException f) {
 			f.printStackTrace();
 		} finally {
 			if (st != null) {
@@ -154,14 +170,14 @@ public class DBToOWLIndividualConverter {
 						continue;
 					}
 					values.add(rs.getDouble(colName));
-					DataPropertyNames.add("has_" + colName); //has_
+					DataPropertyNames.add("has_" + colName); // has_
 				}
 				individual.setFID(rs.getInt("ogc_fid"));
 				individual.setValues(values);
 				individual.setDataPropertyNames(DataPropertyNames);
 				// add to individuals
 				individuals.add(individual);
-				//System.out.println(individual.getDataPropertyNames() + " : "
+				// System.out.println(individual.getDataPropertyNames() + " : "
 				// + individual.getValues());
 			}
 		} catch (SQLException e) {

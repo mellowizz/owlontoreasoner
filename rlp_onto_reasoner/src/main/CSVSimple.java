@@ -8,17 +8,18 @@ import test.testReasoner;
 import databaseToOWL.DBToOWLIndividualConverter;
 
 public class CSVSimple {
+	
     public static void main(String[] args) throws SQLException, IOException{
         DBToOWLIndividualConverter test = new DBToOWLIndividualConverter();
         // table to classify on
         String tableName = "saarburg_train"; //args[0];
         // SEaTH rules to use
-        String rule = "c:/Users/Moran/test-rlp/scikit-learn_rules/saarburg_train.csv";
+        String rule = "c:/Users/Moran/test-rlp/scikit-learn_rules/argmin_DT_3_rules.csv";
         // number of rules to use
-        int numRules = 10;	
+        int numRules = 3;	
         //System.out.println("About to create OWL file from table: " + tableName);
         //File owlFile = test.convertDB(tableName, rule, "DT", numRules); // , fields);
-        File owlFile = new File("C:/Users/Moran/ontologies/saarburg_train_10DT_rules.owl");
+        File owlFile = new File("C:/Users/Moran/ontologies/saarburg_train_3DT_rules_fixed.owl");
         String resultsTbl = owlFile.getName();
         System.out.println(resultsTbl);
         resultsTbl = resultsTbl.substring(0, resultsTbl.lastIndexOf("."));

@@ -16,9 +16,11 @@ public class Main {
 		// table to classify on
 		String tableName = "saarburg_train"; //args[0];
 		// SEaTH rules to use
-		String rulesDir = "c:/Users/Moran/test-rlp/SEaTH/saarburg_test"; // names are reversed
+		String rulesDir = "c:/Users/Moran/test-rlp/SEaTH/reduced"; // names are reversed
+		// DT rule to use.
+        String rule = "c:/Users/Moran/test-rlp/scikit-learn_rules/argmin_DT_3_rules.csv";
 		// number of rules to use
-		int numRules = 2;	
+		int numRules = 1;	
 		//System.out.println("About to create OWL file from table: " + tableName);
 		File owlFile = test.convertDB(tableName, rulesDir, "SEaTH", numRules); // , fields);
 		//File owlFile = new File("C:/Users/Moran/ontologies/wetness_gt20_450_validation_1_rules.owl");
