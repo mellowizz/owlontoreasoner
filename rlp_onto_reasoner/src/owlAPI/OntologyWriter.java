@@ -1,9 +1,12 @@
 package owlAPI;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -21,6 +24,7 @@ import org.semanticweb.owlapi.model.OWLDatatype;
 import org.semanticweb.owlapi.model.OWLLiteral;
 import org.semanticweb.owlapi.model.OWLNamedIndividual;
 import org.semanticweb.owlapi.model.OWLObjectIntersectionOf;
+import org.semanticweb.owlapi.model.OWLObjectUnionOf;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
@@ -30,15 +34,11 @@ import org.semanticweb.owlapi.util.DefaultPrefixManager;
 import org.semanticweb.owlapi.util.SimpleIRIMapper;
 import org.semanticweb.owlapi.vocab.OWL2Datatype;
 
-
-
-
-
-
-
 import dict.defaultDict;
+import owlAPI.OWLmap.owlRuleSet;
 //import conversion.OntologyClass;
 import owlAPI.OntologyClass;
+import uk.ac.manchester.cs.owl.owlapi.OWLObjectUnionOfImpl;
 
 public class OntologyWriter {
 	/*
@@ -56,7 +56,7 @@ public class OntologyWriter {
 	 */
 
 	public void writeAll(LinkedHashSet<OntologyClass> classes,
-			LinkedHashSet<Individual> individuals, defaultDict<String, List<OWLClassExpression>> classesExpressions, IRI documentIRI,
+			LinkedHashSet<Individual> individuals, OWLmap rules, IRI documentIRI,
 			IRI ontologyIRI) throws OWLOntologyCreationException,
 			OWLOntologyStorageException {
 
@@ -112,21 +112,29 @@ public class OntologyWriter {
 				index = index + 1;
 			}
 		}
-		
-		OWLObjectIntersectionOf intersection = null;
+		/* write rules */
+		//OWLObjectIntersectionOf intersection = null;
+		OWLClassExpression intersection = null;
 		OWLClass owlCls = null;
-		for (Entry<String, List<OWLClassExpression>> entry : classesExpressions.entrySet()) {
-			Set rules = new HashSet();
-			String currCls = entry.getKey();
-			List<OWLClassExpression> value = entry.getValue();
-			for (OWLClassExpression rule : value){
-				owlCls = factory.getOWLClass(IRI.create("#" + currCls));
-				rules.add(rule);
+		OWLObjectUnionOf union = null;
+		Iterator it = rules.map.entrySet().iterator();
+		Set<OWLClassExpression> unionSet = new HashSet<OWLClassExpression>();
+		while (it.hasNext()){
+			Map.Entry pair = (Map.Entry) it.next();
+			String currCls = (String) pair.getKey();
+			owlCls = factory.getOWLClass(IRI.create("#" + currCls ));
+			ArrayList<owlRuleSet> currRuleset = (ArrayList<owlRuleSet>) pair.getValue();
+			owlRuleSet firstRuleSet = currRuleset.remove(0);
+			int ruleCount = 0;
+			for (owlRuleSet currRules : currRuleset){
+				intersection = factory.getOWLObjectIntersectionOf(currRules.getRuleList(currCls));
+				union = factory.getOWLObjectUnionOf(owlCls, intersection);
+				manager.addAxiom(ontology, factory.getOWLEquivalentClassesAxiom(
+							intersection, union)); 
+				manager.addAxiom(ontology, factory.getOWLEquivalentClassesAxiom(
+							owlCls, union));
 			}
-			System.out.println("about to add:" + rules.size());
-			intersection = factory.getOWLObjectIntersectionOf(rules);
-			manager.addAxiom(ontology, factory.getOWLEquivalentClassesAxiom(
-					owlCls, intersection));
+			unionSet.clear();
 		}
 		manager.saveOntology(ontology);
 	}

@@ -1,9 +1,7 @@
 package databaseToOWL;
 
-import java.util.List;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -12,8 +10,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.List;
 
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLClassExpression;
@@ -21,6 +20,7 @@ import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyStorageException;
 
 import owlAPI.Individual;
+import owlAPI.OWLmap;
 import owlAPI.OntologyClass;
 import owlAPI.OntologyCreator;
 import owlAPI.OntologyWriter;
@@ -58,17 +58,20 @@ public class DBToOWLIndividualConverter {
 			File file = new File(rulesDir);
 			/* TODO: cleanup! */
 			defaultDict<String, List<OWLClassExpression>> rules = null;
+			OWLmap rulesMap = null;
 			if (file.isFile()) {
 				CSVToOWLRules therules = new CSVToOWLRules(rulesDir,
 						IRI.create(owlFile.toURI()), numRules);
-				rules = therules.CSVRules();
+				rulesMap = therules.CSVRules();
+				ontWrite.writeAll(classes, individuals, rulesMap,
+					IRI.create(owlFile.toURI()), IRI.create(ontologyIRI));
 			} else {
 				CSVToOWLRulesConverter therules = new CSVToOWLRulesConverter(
 						rulesDir, IRI.create(owlFile.toURI()), numRules);
 				rules = therules.CSVRulesConverter();
+				//ontWrite.writeAll(classes, individuals, rules,
+				//	IRI.create(owlFile.toURI()), IRI.create(ontologyIRI));
 			}
-			ontWrite.writeAll(classes, individuals, rules,
-					IRI.create(owlFile.toURI()), IRI.create(ontologyIRI));
 		}
 		catch (OWLOntologyStorageException e2) {
 			throw new RuntimeException(e2.getMessage(), e2);
