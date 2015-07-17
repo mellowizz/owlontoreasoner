@@ -114,9 +114,7 @@ public class OntologyWriter {
 			}
 		}
 		/* write rules */
-		//OWLObjectIntersectionOf intersection = null;
 		OWLClassExpression firstRuleSet= null;
-		OWLClassExpression secondRuleSet = null;
 		OWLClass owlCls = null;
 		OWLObjectUnionOf totalunion = null;
 		Iterator it = rules.map.entrySet().iterator();
@@ -126,8 +124,7 @@ public class OntologyWriter {
 			String currCls = (String) pair.getKey();
 			owlCls = factory.getOWLClass(IRI.create("#" + currCls ));
 			ArrayList<owlRuleSet> currRuleset = (ArrayList<owlRuleSet>) pair.getValue();
-			int ruleCount = 0;
-			for (int i=1; i< currRuleset.size(); i++){
+			for (int i=0; i< currRuleset.size(); i++){
 				firstRuleSet = factory.getOWLObjectIntersectionOf(currRuleset.get(i).getRuleList(currCls));
 				unionSet.add(firstRuleSet);
 			}
@@ -135,7 +132,6 @@ public class OntologyWriter {
 			unionSet.clear();
 			manager.addAxiom(ontology, factory.getOWLEquivalentClassesAxiom(owlCls, totalunion));
 		}
-		
 		manager.saveOntology(ontology);
 	}
 
