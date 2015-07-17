@@ -21,6 +21,7 @@ import org.semanticweb.owlapi.model.OWLDataFactory;
 import org.semanticweb.owlapi.model.OWLDataProperty;
 import org.semanticweb.owlapi.model.OWLDataPropertyAssertionAxiom;
 import org.semanticweb.owlapi.model.OWLDatatype;
+import org.semanticweb.owlapi.model.OWLEquivalentClassesAxiom;
 import org.semanticweb.owlapi.model.OWLLiteral;
 import org.semanticweb.owlapi.model.OWLNamedIndividual;
 import org.semanticweb.owlapi.model.OWLObjectIntersectionOf;
@@ -117,7 +118,7 @@ public class OntologyWriter {
 		OWLClassExpression firstRuleSet= null;
 		OWLClassExpression secondRuleSet = null;
 		OWLClass owlCls = null;
-		OWLObjectUnionOf union = null;
+		OWLObjectUnionOf totalunion = null;
 		Iterator it = rules.map.entrySet().iterator();
 		Set<OWLClassExpression> unionSet = new HashSet<OWLClassExpression>();
 		while (it.hasNext()){
@@ -126,15 +127,15 @@ public class OntologyWriter {
 			owlCls = factory.getOWLClass(IRI.create("#" + currCls ));
 			ArrayList<owlRuleSet> currRuleset = (ArrayList<owlRuleSet>) pair.getValue();
 			int ruleCount = 0;
-			//for (owlRuleSet currRules : currRuleset){
-			for (int i=0; i< currRuleset.size(); i++){
-					firstRuleSet = factory.getOWLObjectIntersectionOf(currRuleset.get(i).getRuleList(currCls));
-					secondRuleSet = factory.getOWLObjectIntersectionOf(currRuleset.get(i).getRuleList(currCls));
-					union = factory.getOWLObjectUnionOf(firstRuleSet);
-					manager.addAxiom(ontology, factory.getOWLEquivalentClassesAxiom(
-							owlCls, union)); 
+			for (int i=1; i< currRuleset.size(); i++){
+				firstRuleSet = factory.getOWLObjectIntersectionOf(currRuleset.get(i).getRuleList(currCls));
+				unionSet.add(firstRuleSet);
 			}
+			totalunion = factory.getOWLObjectUnionOf(unionSet);
+			unionSet.clear();
+			manager.addAxiom(ontology, factory.getOWLEquivalentClassesAxiom(owlCls, totalunion));
 		}
+		
 		manager.saveOntology(ontology);
 	}
 
