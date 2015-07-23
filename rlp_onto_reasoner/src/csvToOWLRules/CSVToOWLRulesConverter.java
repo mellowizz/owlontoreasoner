@@ -5,7 +5,9 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.filechooser.FileNameExtensionFilter;
 
@@ -18,9 +20,13 @@ import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.model.OWLDataFactory;
 import org.semanticweb.owlapi.model.OWLDataProperty;
 import org.semanticweb.owlapi.model.OWLDatatypeRestriction;
+import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
+import org.semanticweb.owlapi.model.OWLOntologyStorageException;
 
+import owlAPI.OWLmap;
+import owlAPI.OWLmap.owlRuleSet;
 import dict.defaultDict;
 
 public class CSVToOWLRulesConverter {
@@ -35,17 +41,22 @@ public class CSVToOWLRulesConverter {
 		this.numRules = numberOfRules;
 	}
 
-	public defaultDict<String, List<OWLClassExpression>> CSVRulesConverter()
+	//public defaultDict<String, List<OWLClassExpression>> CSVRulesConverter()
+	public OWLmap CSVRulesConverter()
 			throws OWLOntologyCreationException, NumberFormatException,
-			IOException {
+			IOException, OWLOntologyStorageException {
 		final FileNameExtensionFilter extensionFilter = new FileNameExtensionFilter(
 				"csv", "CSV");
 		final File file = new File(this.directory);
-		CSVReader reader;
+		CSVReader reader = null;
 		OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
+		OWLOntology ontology = manager
+				.loadOntologyFromOntologyDocument(this.docIRI);
 		OWLDataFactory factory = manager.getOWLDataFactory();
-		defaultDict<String, List<OWLClassExpression>> classesExpressions = new defaultDict<String, List<OWLClassExpression>>(
-				ArrayList.class);
+		OWLmap owlRulesMap = new OWLmap();
+		//defaultDict<String, List<OWLClassExpression>> classesExpressions = new defaultDict<String, List<OWLClassExpression>>(
+		//		ArrayList.class);
+		
 		for (final File csvFile : file.listFiles()) {
 			if (extensionFilter.accept(csvFile)) {
 				reader = new CSVReader(new FileReader(csvFile));
@@ -60,6 +71,9 @@ public class CSVToOWLRulesConverter {
 				OWLDatatypeRestriction newRestriction = null;
 				OWLDataProperty hasParameter = null;
 				OWLDatatypeRestriction newRestrictionOpp = null;
+				Set<OWLClassExpression> ruleSet = new HashSet<OWLClassExpression>();
+				Set<OWLClassExpression> ruleSetOpp = new HashSet<OWLClassExpression>();
+				int ruleCounter = 0;
 				/* could make MAX_EXCLUSIVE set by if/else than emit right code */
 				while ((nextLine = reader.readNext()) != null
 						&& lineNum <= this.numRules) {
@@ -67,13 +81,12 @@ public class CSVToOWLRulesConverter {
 					if (parameter.equals("aquatic") || parameter.equals("dry")
 							|| parameter.equals("mesic")
 							|| parameter.equals("very_wet")) {
-						System.out.println("saw wetness");
-						// do something
-						//System.out.println("adding: " + parameter + " rules");
-						//classesExpressions.get(parameter).addAll(rulesList);
+						//ignore
 						continue;
 					}
 					try {
+						ruleCounter++;
+						/* try to create a rule out of line */
                         parameter = "has_" + parameter;
                         String direction = nextLine[2];
                         String threshold = nextLine[3];
@@ -81,6 +94,7 @@ public class CSVToOWLRulesConverter {
                                 + " threshold: " + threshold);
                         hasParameter = factory.getOWLDataProperty(IRI.create("#"
                                 + parameter));
+                        /* TODO: turn this into a Hashmap of newRestrictions*/
 						switch (direction) {
                             case ">=":
                                 newRestriction = factory
@@ -132,25 +146,49 @@ public class CSVToOWLRulesConverter {
 						OWLClassExpression newWetnessRestriction = factory
 								.getOWLDataSomeValuesFrom(hasParameter,
 										newRestriction);
-						//
 						OWLClassExpression newWetnessRestrictionOpp = factory
 								.getOWLDataSomeValuesFrom(hasParameter,
 										newRestrictionOpp);
-
-						classesExpressions.get(classNames[0]).add(
-								newWetnessRestriction);
-						// add opposite rule:
-						//classesExpressions.get(classNames[1]).add(
-						//		newWetnessRestrictionOpp);
+						ruleSet.add(newWetnessRestriction);
+						ruleSetOpp.add(newWetnessRestrictionOpp);
 						lineNum++;
 					} catch (NullPointerException e) {
 						e.printStackTrace();
 					}
 				}
+				/*done with CSV, add rules */
+				OWLmap.owlRuleSet rule = new OWLmap.owlRuleSet (classNames[0], ruleCounter);
+				OWLmap.owlRuleSet rule_target = new OWLmap.owlRuleSet (classNames[1], ruleCounter);
+				rule.addAll(ruleSet);
+				rule_target.addAll(ruleSetOpp);
+                ruleSet.clear();
+                ruleSetOpp.clear();
+                if (owlRulesMap.get(classNames[0]) == null){
+                    ArrayList <owlRuleSet> newRules = new ArrayList<owlRuleSet>();
+                    newRules.add(rule);
+                    owlRulesMap.put(classNames[0], newRules);
+                    continue;
+                } else{
+                	ruleCounter = 0;
+                	/* already seen this class! --update by or'ing the rules! */
+                	owlRulesMap.get(classNames[0]).add(rule);
+                }
+                if (owlRulesMap.get(classNames[1]) == null){
+                    ArrayList <owlRuleSet> newRules = new ArrayList<owlRuleSet>();
+                    newRules.add(rule);
+                    owlRulesMap.put(classNames[1], newRules);
+                    continue;
+                } else{
+                	ruleCounter = 0;
+                	/* already seen this class! --update by or'ing the rules! */
+                	owlRulesMap.get(classNames[1]).add(rule);
+                }
 			}
 		}
-		System.out.println("There are: " + classesExpressions.size()
-				+ " keys: " + classesExpressions.keySet().size());
-		return classesExpressions;
+		manager.saveOntology(ontology);
+		reader.close();
+		//System.out.println("There are: " + classesExpressions.size()
+		//		+ " keys: " + classesExpressions.keySet().size());
+		return owlRulesMap; //classesExpressions;
 	}
 }

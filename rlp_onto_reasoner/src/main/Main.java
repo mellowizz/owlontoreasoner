@@ -14,16 +14,16 @@ public class Main {
 		
 		DBToOWLIndividualConverter test = new DBToOWLIndividualConverter();
 		// table to classify on
-		String tableName = "saarburg_train"; //args[0];
+		String tableName = "wetness_200_testing"; //args[0];
 		// SEaTH rules to use
-		String rulesDir = "c:/Users/Moran/test-rlp/SEaTH/reduced"; // names are reversed
+		String rulesDir = "c:/Users/Moran/test-rlp/SEaTH/saarburg_test"; // names are reversed
 		// DT rule to use.
         String rule = "c:/Users/Moran/test-rlp/WEKA/PART_reduced_51.csv";
         //argmin_DT_3_rules.csv";
 		// number of rules to use
-		int numRules = 49;	
+		int numRules = 1;	
 		//System.out.println("About to create OWL file from table: " + tableName);
-		File owlFile = test.convertDB(tableName, rule, "PART", numRules); // , fields);
+		File owlFile = test.convertDB(tableName, rulesDir, "seath", numRules); // , fields);
 		//File owlFile = new File("C:/Users/Moran/ontologies/saarburg_train_50PART_rules.owl");
 		String resultsTbl = owlFile.getName();
 		resultsTbl = resultsTbl.substring(0, resultsTbl.lastIndexOf("."));
