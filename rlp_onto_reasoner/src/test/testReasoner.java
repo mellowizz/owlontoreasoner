@@ -46,6 +46,7 @@ public class testReasoner {
 			st = con.createStatement();
 			//String validationTable = tableName + "_results";
 			System.out.println("going to create tableName: " + tableName + " from validation table: "+ validationTable);
+			st.execute("drop TABLE if exists " + tableName + ";");
 			String createSql = "CREATE TABLE " +  tableName + "( ogc_fid integer, wetness VARCHAR(25), classified VARCHAR(25), PRIMARY KEY(ogc_fid));";
 			System.out.println(createSql);
 			st.executeUpdate(createSql);

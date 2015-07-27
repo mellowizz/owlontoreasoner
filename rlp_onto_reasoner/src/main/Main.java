@@ -3,7 +3,6 @@ package main;
 import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.List;
 
 import test.testReasoner;
 import databaseToOWL.DBToOWLIndividualConverter;
@@ -21,10 +20,10 @@ public class Main {
         String rule = "c:/Users/Moran/test-rlp/WEKA/PART_reduced_51.csv";
         //argmin_DT_3_rules.csv";
 		// number of rules to use
-		int numRules = 1;	
+		int numRules = 5;	
 		//System.out.println("About to create OWL file from table: " + tableName);
-		//File owlFile = test.convertDB(tableName, rulesDir, "seath", numRules); // , fields);
-		File owlFile = new File("C:/Users/Moran/ontologies/saarburg_200_testing_300_zstats_1seath_rules.owl");
+		File owlFile = test.convertDB(tableName, rulesDir, "seath", numRules); // , fields);
+		//File owlFile = new File("C:/Users/Moran/ontologies/saarburg_200_testing_300_zstats_1seath_rules.owl");
 		String resultsTbl = owlFile.getName();
 		resultsTbl = resultsTbl.substring(0, resultsTbl.lastIndexOf("."));
 		resultsTbl = resultsTbl + "_results";

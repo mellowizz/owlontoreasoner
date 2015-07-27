@@ -64,5 +64,12 @@ public class OWLmap {
 	public ArrayList<owlRuleSet> get(String key) {
 		return map.get(key);
 	}
+	public ArrayList<owlRuleSet> pop(String key) {
+		return map.remove(key); 
+	}
+	
+	public ArrayList<owlRuleSet> replace(String key, ArrayList<owlRuleSet> value) {
+		return map.replace(key, value); 
+	}
 
 }

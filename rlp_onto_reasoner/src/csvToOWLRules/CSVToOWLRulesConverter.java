@@ -4,14 +4,10 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import javax.swing.filechooser.FileNameExtensionFilter;
-
-import com.opencsv.CSVReader;
 
 import org.apache.commons.io.FilenameUtils;
 import org.semanticweb.owlapi.apibinding.OWLManager;
@@ -27,7 +23,8 @@ import org.semanticweb.owlapi.model.OWLOntologyStorageException;
 
 import owlAPI.OWLmap;
 import owlAPI.OWLmap.owlRuleSet;
-import dict.defaultDict;
+
+import com.opencsv.CSVReader;
 
 public class CSVToOWLRulesConverter {
 	String directory;
@@ -70,9 +67,9 @@ public class CSVToOWLRulesConverter {
 				int lineNum = 1;
 				OWLDatatypeRestriction newRestriction = null;
 				OWLDataProperty hasParameter = null;
-				OWLDatatypeRestriction newRestrictionOpp = null;
+				//OWLDatatypeRestriction newRestrictionOpp = null;
 				Set<OWLClassExpression> ruleSet = new HashSet<OWLClassExpression>();
-				Set<OWLClassExpression> ruleSetOpp = new HashSet<OWLClassExpression>();
+				//Set<OWLClassExpression> ruleSetOpp = new HashSet<OWLClassExpression>();
 				int ruleCounter = 0;
 				/* could make MAX_EXCLUSIVE set by if/else than emit right code */
 				while ((nextLine = reader.readNext()) != null
@@ -100,18 +97,18 @@ public class CSVToOWLRulesConverter {
                                 newRestriction = factory
                                         .getOWLDatatypeMinInclusiveRestriction(Double
                                                 .parseDouble(threshold));
-                                newRestrictionOpp = factory
+                                /*newRestrictionOpp = factory
                                         .getOWLDatatypeMaxExclusiveRestriction(Double
-                                                .parseDouble(threshold));
+                                                .parseDouble(threshold));*/
                                 break;
                             case "<=":
                                 newRestriction = factory
                                         .getOWLDatatypeMaxInclusiveRestriction(Double
                                                 .parseDouble(threshold));
                                 
-                                newRestrictionOpp = factory
+                                /*newRestrictionOpp = factory
                                         .getOWLDatatypeMinExclusiveRestriction(Double
-                                                .parseDouble(threshold));
+                                                .parseDouble(threshold)); */
                                 break;
 
                             case "<":
@@ -119,18 +116,18 @@ public class CSVToOWLRulesConverter {
                                         .getOWLDatatypeMaxExclusiveRestriction(Double
                                                 .parseDouble(threshold));
                                 
-                                newRestrictionOpp = factory
+                                /*newRestrictionOpp = factory
                                         .getOWLDatatypeMinExclusiveRestriction(Double
-                                                .parseDouble(threshold));
+                                                .parseDouble(threshold)); */
                                 break;
                             case ">":
                                 newRestriction = factory
                                         .getOWLDatatypeMinExclusiveRestriction(Double
                                                 .parseDouble(threshold));
                                 
-                                newRestrictionOpp = factory
+                                /*newRestrictionOpp = factory
                                         .getOWLDatatypeMaxExclusiveRestriction(Double
-                                                .parseDouble(threshold));
+                                                .parseDouble(threshold));*/
                                 break;
                             default:
                                 System.out
@@ -146,43 +143,38 @@ public class CSVToOWLRulesConverter {
 						OWLClassExpression newWetnessRestriction = factory
 								.getOWLDataSomeValuesFrom(hasParameter,
 										newRestriction);
-						OWLClassExpression newWetnessRestrictionOpp = factory
-								.getOWLDataSomeValuesFrom(hasParameter,
-										newRestrictionOpp);
+						//OWLClassExpression newWetnessRestrictionOpp = factory
+						//		.getOWLDataSomeValuesFrom(hasParameter,
+						//				newRestrictionOpp);
 						ruleSet.add(newWetnessRestriction);
-						ruleSetOpp.add(newWetnessRestrictionOpp);
+						//ruleSetOpp.add(newWetnessRestrictionOpp);
 						lineNum++;
 					} catch (NullPointerException e) {
 						e.printStackTrace();
 					}
 				}
 				/*done with CSV, add rules */
-				OWLmap.owlRuleSet rule = new OWLmap.owlRuleSet (classNames[0], ruleCounter);
-				OWLmap.owlRuleSet rule_target = new OWLmap.owlRuleSet (classNames[1], ruleCounter);
-				rule.addAll(ruleSet);
-				rule_target.addAll(ruleSetOpp);
-                ruleSet.clear();
-                ruleSetOpp.clear();
                 if (owlRulesMap.get(classNames[0]) == null){
+                    OWLmap.owlRuleSet rule = new OWLmap.owlRuleSet (classNames[0], ruleCounter);
+                    //OWLmap.owlRuleSet rule_target = new OWLmap.owlRuleSet (classNames[1], ruleCounter);
+                    rule.addAll(ruleSet);
+                    //rule_target.addAll(ruleSetOpp);
+                    //ruleSetOpp.clear();
                     ArrayList <owlRuleSet> newRules = new ArrayList<owlRuleSet>();
                     newRules.add(rule);
                     owlRulesMap.put(classNames[0], newRules);
-                    continue;
+                    //continue;
                 } else{
-                	ruleCounter = 0;
-                	/* already seen this class! --update by or'ing the rules! */
-                	owlRulesMap.get(classNames[0]).add(rule);
-                }
-                if (owlRulesMap.get(classNames[1]) == null){
+                	ArrayList<owlRuleSet> existingRules = owlRulesMap.pop(classNames[0]);
+                	owlRuleSet the_rules = existingRules.remove(0);
+                	ruleSet.addAll(the_rules.getRuleList(classNames[0]));
+                    OWLmap.owlRuleSet rule = new OWLmap.owlRuleSet (classNames[0], ruleCounter);
                     ArrayList <owlRuleSet> newRules = new ArrayList<owlRuleSet>();
+                    rule.addAll(ruleSet);
                     newRules.add(rule);
-                    owlRulesMap.put(classNames[1], newRules);
-                    continue;
-                } else{
-                	ruleCounter = 0;
-                	/* already seen this class! --update by or'ing the rules! */
-                	owlRulesMap.get(classNames[1]).add(rule);
+                	owlRulesMap.put(classNames[0], newRules);
                 }
+                    ruleSet.clear();
 			}
 		}
 		manager.saveOntology(ontology);
