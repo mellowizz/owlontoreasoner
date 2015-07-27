@@ -17,12 +17,12 @@ public class Main {
 		// SEaTH rules to use
 		String rulesDir = "c:/Users/Moran/test-rlp/SEaTH/saarburg_seath_zstats"; // names are reversed
 		// DT rule to use.
-        String rule = "c:/Users/Moran/test-rlp/WEKA/PART_reduced_51.csv";
+        String rule = "c:/Users/Moran/test-rlp/scikit-learn_rules/saarburg_200_zstats_6_DT_rules.csv";
         //argmin_DT_3_rules.csv";
 		// number of rules to use
-		int numRules = 5;	
+		int numRules = 6;	
 		//System.out.println("About to create OWL file from table: " + tableName);
-		File owlFile = test.convertDB(tableName, rulesDir, "seath", numRules); // , fields);
+		File owlFile = test.convertDB(tableName, rule, "DT", numRules); // , fields);
 		//File owlFile = new File("C:/Users/Moran/ontologies/saarburg_200_testing_300_zstats_1seath_rules.owl");
 		String resultsTbl = owlFile.getName();
 		resultsTbl = resultsTbl.substring(0, resultsTbl.lastIndexOf("."));
