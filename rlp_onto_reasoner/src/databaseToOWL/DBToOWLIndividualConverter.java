@@ -9,13 +9,9 @@ import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
-import java.util.List;
 
 import org.semanticweb.owlapi.model.IRI;
-import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyStorageException;
 
@@ -26,7 +22,6 @@ import owlAPI.OntologyCreator;
 import owlAPI.OntologyWriter;
 import csvToOWLRules.CSVToOWLRules;
 import csvToOWLRules.CSVToOWLRulesConverter;
-import dict.defaultDict;
 
 public class DBToOWLIndividualConverter {
 
