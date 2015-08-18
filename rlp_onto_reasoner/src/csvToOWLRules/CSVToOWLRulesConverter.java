@@ -61,6 +61,12 @@ public class CSVToOWLRulesConverter {
 				String fileNameNoExt = FilenameUtils.removeExtension(csvFile
 						.getName());
 				String[] classNames = fileNameNoExt.split("-");
+				if (classNames[0].contains(" ")){
+					classNames[0] = classNames[0].replace(" ", "_");
+				}
+				if (classNames[1].contains(" ")){
+					classNames[1] = classNames[1].replace(" ", "_");
+				}
 				System.out.println("class: " + classNames[0] + " target: "
 						+ classNames[1]);
 				String[] nextLine;
@@ -75,12 +81,14 @@ public class CSVToOWLRulesConverter {
 				while ((nextLine = reader.readNext()) != null
 						&& lineNum <= this.numRules) {
 					String parameter = nextLine[0]; /* why has_? */
+					/*
 					if (parameter.equals("aquatic") || parameter.equals("dry")
 							|| parameter.equals("mesic")
 							|| parameter.equals("very_wet")) {
 						//ignore
 						continue;
 					}
+					*/
 					try {
 						ruleCounter++;
 						/* try to create a rule out of line */

@@ -27,15 +27,14 @@ public class DBToOWLIndividualConverter {
 
 	public File convertDB(String tableName, String rulesDir, String algorithm,
 			Integer numRules) throws SQLException, IOException {
-		return convertDB(tableName, rulesDir, algorithm, numRules, "wetness");
+		return convertDB(tableName, rulesDir, algorithm, numRules, "NATFLO_wetness");
 	}
 
 	public File convertDB(String tableName, String rulesDir, String algorithm,
-			Integer numRules, String colName) // List<String> colNames)
+			Integer numRules, String colName) 
 			throws SQLException, IOException {
 		LinkedHashSet<Individual> individuals;
 		LinkedHashSet<OntologyClass> classes;
-		// LinkedHashSet<OWLDataRangeFacetRestriction> rules;
 		File owlFile = new File("C:/Users/Moran/ontologies/" + tableName + "_"
 				+ numRules + algorithm + "_rules.owl");
 		try {
@@ -93,9 +92,8 @@ public class DBToOWLIndividualConverter {
 		try {
 			db = DriverManager.getConnection(url);
 			st = db.createStatement();
-			ResultSet rs = st.executeQuery("SELECT DISTINCT(" + colName
-					+ ") FROM " + tableName); // + " where " + colName +
-												// "!= ''"); // rlp_all_small
+			ResultSet rs = st.executeQuery("SELECT DISTINCT( \"" + colName
+					+ "\") FROM " + tableName); 
 			while (rs.next()) {
 				String parameter = rs.getString(colName);
 				if (parameter == null) {
@@ -103,10 +101,10 @@ public class DBToOWLIndividualConverter {
 				}
 				OntologyClass eunisObj = new OntologyClass();
 				System.out.println(colName);
-				// /System.out.println(parameter);
-				if (parameter.contains("/")) {
-					parameter = parameter.split("/")[1];
-				}
+				//System.out.println(parameter);
+				if (parameter.contains(" ")) {
+					parameter = parameter.replace(" ", "_");
+				} 
 				if (eunisClasses.contains(eunisObj.getName()) == false) {
 					eunisObj.setName(parameter);
 					eunisClasses.add(eunisObj);
@@ -146,7 +144,7 @@ public class DBToOWLIndividualConverter {
 			db = DriverManager.getConnection(url);
 			st = db.createStatement();
 			System.out.println("tableName: " + tableName);
-			rs = st.executeQuery("SELECT * FROM " + tableName); // rlp_all_small
+			rs = st.executeQuery("SELECT * FROM \"" + tableName + "\""); // rlp_all_small
 			rsmd = rs.getMetaData();
 			int colCount = rsmd.getColumnCount();
 			if (rsmd == null || colCount == 0 || rs == null) {
