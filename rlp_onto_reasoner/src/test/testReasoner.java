@@ -1,9 +1,5 @@
 package test;
 
-import dict.defaultDict;
-
-import com.google.common.base.Joiner;
-
 import java.io.File;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -14,12 +10,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-import rlpUtils.RLPUtils;
-import uk.ac.manchester.cs.factplusplus.owlapiv3.FaCTPlusPlusReasonerFactory;
 
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.OWLClass;
@@ -27,12 +19,23 @@ import org.semanticweb.owlapi.model.OWLNamedIndividual;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyManager;
-import org.semanticweb.owlapi.reasoner.InferenceType;
 import org.semanticweb.owlapi.reasoner.NodeSet;
 import org.semanticweb.owlapi.reasoner.OWLReasoner;
 
+import rlpUtils.RLPUtils;
+import uk.ac.manchester.cs.factplusplus.owlapiv3.FaCTPlusPlusReasonerFactory;
+
+import com.google.common.base.Joiner;
+
+import dict.defaultDict;
+
 public class testReasoner {
-	public static void createTable(defaultDict<Integer, List<String>> myDict, String tableName, String validationTable) {//HashMap<String, ArrayList<String>> myMap) {
+	
+	public static void createTable(defaultDict<Integer, List<String>> myDict, String tableName, String validationTable) {
+		createTable(myDict, tableName, validationTable, "NATFLO_wetness");
+	}
+
+	public static void createTable(defaultDict<Integer, List<String>> myDict, String tableName, String validationTable, String parameter) {
 		Connection con = null;
 		Statement st = null;
 		ResultSet rs = null;
@@ -47,13 +50,13 @@ public class testReasoner {
 			//String validationTable = tableName + "_results";
 			System.out.println("going to create tableName: " + tableName + " from validation table: "+ validationTable);
 			st.execute("drop TABLE if exists " + tableName + ";");
-			String createSql = "CREATE TABLE " +  tableName + "( ogc_fid integer, wetness VARCHAR(25), classified VARCHAR(25), PRIMARY KEY(ogc_fid));";
+			String createSql = "CREATE TABLE " +  tableName + "( ogc_fid integer, \"" + parameter + "\" VARCHAR(25), classified VARCHAR(25), PRIMARY KEY(ogc_fid));";
 			System.out.println(createSql);
 			st.executeUpdate(createSql);
-			validClass = st.executeQuery("select ogc_fid, wetness from " + validationTable);
+			validClass = st.executeQuery("select ogc_fid, \"" + parameter + "\" from " + validationTable);
 			HashMap<Integer, String> validClasses = new HashMap <Integer, String>();
 			while (validClass.next()){
-				validClasses.put(validClass.getInt("ogc_fid"), validClass.getString("wetness"));
+				validClasses.put(validClass.getInt("ogc_fid"), validClass.getString(parameter));
 			}
 			 for (Entry<Integer, List<String>> ee : myDict.entrySet()) {
 				Integer key = ee.getKey();
@@ -61,7 +64,7 @@ public class testReasoner {
 				System.out.println();
 				System.out.println(key + ":");
 				String new_value = Joiner.on("_").skipNulls().join(values);
-				String query = "insert into " + tableName + "(ogc_fid, wetness, classified) values(" + key +
+				String query = "insert into " + tableName + "(ogc_fid, \"" + parameter + "\", classified) values(" + key +
 						",'" + validClasses.get(key) +"','" + new_value + "');";
 				
 				System.out.println(query);
@@ -90,32 +93,36 @@ public class testReasoner {
 	}
 
 	public static String classifyOWL(File fileName, String tableName, String resultsTbl) throws SQLException{
+		return classifyOWL(fileName, tableName, resultsTbl, "NATFLO_wetness");
+	}
+
+	public static String classifyOWL(File fileName, String tableName, String resultsTbl, String parameter) throws SQLException{
 		OWLOntologyManager mgr = OWLManager.createOWLOntologyManager();
 		OWLOntology onto = null;
 		if (mgr == null || fileName == null) {
 			System.out.println("ERROR!!");
 		}
 		
-		HashMap<OWLClass,Set<OWLClass>> someValueFromAxioms = new HashMap<OWLClass,Set<OWLClass>>();
 
 		System.out.println("Before try");
 		try {
 			onto = mgr.loadOntologyFromOntologyDocument(fileName);
-			//OWLReasoner hermit = new Reasoner.ReasonerFactory().createReasoner(onto);
 			OWLReasoner factplusplus = new FaCTPlusPlusReasonerFactory()
 					.createReasoner(onto); 
 			System.out.println(factplusplus.getReasonerVersion());
-			/* Do I need to do this?*/
-			//factplusplus.precomputeInferences(InferenceType.CLASS_HIERARCHY);
 			HashMap<String, ArrayList<String>> classesHash = new HashMap<String, ArrayList<String>>();
 			
-			ArrayList<String> classList = RLPUtils.getDistinctValuesFromTbl(tableName, "wetness");
+			ArrayList<String> classList = RLPUtils.getDistinctValuesFromTbl(tableName, parameter);
 			defaultDict<Integer, List<String>> dict = new defaultDict<Integer, List<String>>(ArrayList.class);
 			for (OWLClass c : onto.getClassesInSignature())
 			{
 				if (classList.isEmpty()){ System.out.println("class list empty!"); break;}
-				String currClass = c.getIRI().getFragment();			
+				String currClass = c.getIRI().getFragment();
+				if (currClass.contains("/")) {
+					currClass = currClass.split("/")[1];
+				}
 				System.out.println("current class: " + currClass);
+				
 				if (classList.contains(currClass)) {
 					NodeSet<OWLNamedIndividual> instances = factplusplus
 							.getInstances(c, false);
@@ -138,74 +145,12 @@ public class testReasoner {
 			}
 			/* write results to DB */
 			//String originalDataTable = "rlp_eunis_all_parameters";
-			createTable(dict, resultsTbl, tableName); 
+			createTable(dict, resultsTbl, tableName, parameter); 
 		} catch (OWLOntologyCreationException e) {
 			e.printStackTrace();
 		} finally {
 			System.out.println("ALL DONE!");
 		}
 		return resultsTbl; 
-		
-	}
-	/* no longer used */
-	public static void main(String[] args) throws SQLException {
-		OWLOntologyManager mgr = OWLManager.createOWLOntologyManager();
-		String fileName = "wetness_Saarburg_noaquatic_3_rules.owl";
-		File file = new File(
-				"C:\\Users\\Moran\\ontologies\\" + fileName);
-		String tableName;
-		OWLOntology onto = null;
-		if (mgr == null || file == null) {
-			System.out.println("ERROR!!");
-		}
-		HashMap<OWLClass,Set<OWLClass>> someValueFromAxioms = new HashMap<OWLClass,Set<OWLClass>>();
-
-		System.out.println("Before try");
-		try {
-			tableName = file.getName();
-			tableName = tableName.substring(0, tableName.lastIndexOf("."));
-			onto = mgr.loadOntologyFromOntologyDocument(file);
-			//OWLReasoner hermit = new Reasoner.ReasonerFactory().createReasoner(onto);
-			OWLReasoner factplusplus = new FaCTPlusPlusReasonerFactory()
-					.createReasoner(onto); 
-			System.out.println(factplusplus.getReasonerVersion());
-			/* Do I need to do this?*/
-			//factplusplus.precomputeInferences(InferenceType.CLASS_HIERARCHY);
-			HashMap<String, ArrayList<String>> classesHash = new HashMap<String, ArrayList<String>>();
-			ArrayList<String> classList = RLPUtils.getDistinctValuesFromTbl(tableName, "wetness");
-			defaultDict<Integer, List<String>> dict = new defaultDict<Integer, List<String>>(ArrayList.class);
-			for (OWLClass c : onto.getClassesInSignature()) {
-				if (classList.isEmpty()){ System.out.println("class list empty!"); break;}
-				String currClass = c.getIRI().getFragment();			
-				System.out.println("current class: " + currClass);
-				if (classList.contains(currClass)) {
-					NodeSet<OWLNamedIndividual> instances = factplusplus
-							.getInstances(c, false);
-					System.out.println("current class: " + currClass + " isEmpty? " + instances.isEmpty());
-					for (OWLNamedIndividual i : instances.getFlattened()) {
-						dict.get(Integer.parseInt(i.getIRI().getFragment())).add(currClass);
-						System.out.println(i.getIRI().getFragment());
-					}
-					System.out.println("Total: "
-							+ instances.getFlattened().size());
-				}
-				else{
-					continue;
-				}
-			}
-			for (ArrayList<String> clazz: classesHash.values()){
-				System.out.println(clazz.toString());
-				System.out.println("Class size: " + clazz.size());
-			}
-			/* write results to DB */
-			//String originalDataTable = "rlp_eunis_all_parameters";
-			String validationTable = "wetness_Saarburg_noaquatic";
-			String resultsTable = validationTable + "_results";
-			createTable(dict, resultsTable, validationTable); 
-		} catch (OWLOntologyCreationException e) {
-			e.printStackTrace();
-		} finally {
-			System.out.println("ALL DONE!");
-		}
 	}
 }

@@ -13,22 +13,25 @@ public class Main {
 		
 		DBToOWLIndividualConverter test = new DBToOWLIndividualConverter();
 		// table to classify on
-		String tableName = "saarburg_200_testing_300_zstats"; //args[0];
+		String parameter = "NATFLO_slope";
+		String tableName = "testing_natflo_slope_200"; //args[0];
 		// SEaTH rules to use
-		String rulesDir = "c:/Users/Moran/test-rlp/SEaTH/saarburg_seath_zstats"; // names are reversed
+		String rulesDir = "c:/Users/Moran/test-rlp/SEaTH/training_natflo_slope";
 		// DT rule to use.
-        String rule = "c:/Users/Moran/test-rlp/scikit-learn_rules/saarburg_200_zstats_6_DT_rules.csv";
+        //String rule = "c:/Users/Moran/test-rlp/scikit-learn_rules/saarburg_training_14_DT_rules.csv";
+        //String rule = "c:/Users/Moran/test-rlp/WEKA/training_natflo_wetness_16_PART_rules.csv";
+        String rule = "c:/Users/Moran/tubCloud/Thesis/dt_natflo_slope_rules.csv";
         //argmin_DT_3_rules.csv";
 		// number of rules to use
-		int numRules = 6;	
+		int numRules = 1;	
 		//System.out.println("About to create OWL file from table: " + tableName);
-		File owlFile = test.convertDB(tableName, rule, "DT", numRules); // , fields);
-		//File owlFile = new File("C:/Users/Moran/ontologies/saarburg_200_testing_300_zstats_1seath_rules.owl");
+		File owlFile = test.convertDB(tableName, rule, "dt", numRules, parameter); // , fields);
+		//File owlFile = new File("C:/Users/Moran/ontologies/saarburg_testing_600_16PART_rules.owl");
 		String resultsTbl = owlFile.getName();
 		resultsTbl = resultsTbl.substring(0, resultsTbl.lastIndexOf("."));
 		resultsTbl = resultsTbl + "_results";
 		System.out.println("successfully created: " + owlFile + " from " + tableName);
-		String returnTbl = testReasoner.classifyOWL(owlFile, tableName, resultsTbl);
+		String returnTbl = testReasoner.classifyOWL(owlFile, tableName, resultsTbl, parameter);
 		if (returnTbl != resultsTbl){
 			System.out.println("returned table and results table mismatch!");
 		}
