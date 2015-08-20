@@ -57,7 +57,7 @@ public class OntologyWriter {
 	 */
 
 	public void writeAll(LinkedHashSet<OntologyClass> classes,
-			LinkedHashSet<Individual> individuals, OWLmap rules, IRI documentIRI,
+			LinkedHashSet<Individual> individuals, OWLmap rules, String colName, IRI documentIRI,
 			IRI ontologyIRI) throws OWLOntologyCreationException,
 			OWLOntologyStorageException {
 
@@ -70,20 +70,19 @@ public class OntologyWriter {
 		PrefixManager pm = new DefaultPrefixManager(ontologyIRI.toString()); // +
 																				// '#'
 
-		OWLClass wetness = factory.getOWLClass(IRI.create(ontologyIRI
-				+ "#wetness"));
+		OWLClass parameter = factory.getOWLClass(IRI.create(ontologyIRI
+				+ "#" + colName));
 		
 		for (OntologyClass EUClass : classes) {
 			OWLClass cls = factory.getOWLClass(IRI.create(ontologyIRI + "#"
 					+ EUClass.getName()));
 			OWLClass thing = factory.getOWLThing();
-			OWLAxiom classAx = factory.getOWLSubClassOfAxiom(cls, wetness);
-			OWLAxiom wetnessAx = factory.getOWLSubClassOfAxiom(wetness, thing);
+			OWLAxiom classAx = factory.getOWLSubClassOfAxiom(cls, parameter);
+			OWLAxiom parameterAx = factory.getOWLSubClassOfAxiom(parameter, thing);
 			manager.applyChange(new AddAxiom(ontology, classAx));
-			manager.applyChange(new AddAxiom(ontology, wetnessAx));
+			manager.applyChange(new AddAxiom(ontology, parameterAx));
 		}
 		
-
 		System.out.println("# of individuals: " + individuals.size());
 
 		for (Individual ind : individuals) {
@@ -105,10 +104,26 @@ public class OntologyWriter {
 				OWLDataPropertyAssertionAxiom dataPropertyAssertion = factory
 						.getOWLDataPropertyAssertionAxiom(dataProp, obj,
 								literal);
+				manager.applyChange(new AddAxiom(ontology, dataPropertyAssertion));
+				index = index + 1;
+			}
+			index = 0;
+			for (String value : ind.getStringValues()) {
+				OWLDataProperty dataProp = factory.getOWLDataProperty("#"
+						+ ind.getDataPropertyNames().get(index), pm);
 
-				//manager.addAxiom(ontology, dataPropertyAssertion);
-				//System.out.println("Data property assertion:" + dataPropertyAssertion.toString() );
-				
+				OWLDatatype stringDatatype = factory
+						.getOWLDatatype(OWL2Datatype.XSD_STRING.getIRI());
+				//System.out.println("about to write: " + value);
+				if (value == null){
+					value = "";
+				}
+				OWLLiteral literal = factory.getOWLLiteral(value,
+						stringDatatype);
+
+				OWLDataPropertyAssertionAxiom dataPropertyAssertion = factory
+						.getOWLDataPropertyAssertionAxiom(dataProp, obj,
+								literal);
 				manager.applyChange(new AddAxiom(ontology, dataPropertyAssertion));
 				index = index + 1;
 			}

@@ -62,7 +62,7 @@ public class DBToOWLIndividualConverter {
 						rulesDir, IRI.create(owlFile.toURI()), numRules);
 				rulesMap = therules.CSVRulesConverter();
 			}
-			ontWrite.writeAll(classes, individuals, rulesMap,
+			ontWrite.writeAll(classes, individuals, rulesMap, colName,
 					IRI.create(owlFile.toURI()), IRI.create(ontologyIRI));
 		}
 		catch (OWLOntologyStorageException e2) {
@@ -154,20 +154,30 @@ public class DBToOWLIndividualConverter {
 			while (rs.next()) {
 				// System.out.println("RS");
 				ArrayList<Number> values = new ArrayList<Number>();
+				ArrayList<String> stringValues = new ArrayList<String>();
 				ArrayList<String> DataPropertyNames = new ArrayList<String>();
 				Individual individual = new Individual();
 				for (int i = 1; i <= colCount; i++) {
 					String colName = rsmd.getColumnName(i);
-					if (rsmd.getColumnType(i) != java.sql.Types.DOUBLE
-							|| colName.endsWith("id")) {
-						// System.out.println("Skipping column: "+ colName);
+					if (colName.endsWith("id")){
 						continue;
+					} else if (colName.startsWith("NATFLO") || colName.startsWith("EUNIS") || colName.startsWith("EAGLE")){
+						String myValue = rs.getString(colName);
+						if (myValue == null){
+							myValue = "";
+						}
+							stringValues.add(rs.getString(colName));
+							DataPropertyNames.add("has_" + colName); // has_	
+						//System.out.println("colname: " + colName + " property: " + rs.getString(colName));
+					} else if (rsmd.getColumnType(i) == java.sql.Types.DOUBLE){
+						values.add(rs.getDouble(colName));
+						DataPropertyNames.add("has_" + colName); // has_
+						//System.out.println("colname: " + colName + " property: " + rs.getDouble(colName));
 					}
-					values.add(rs.getDouble(colName));
-					DataPropertyNames.add("has_" + colName); // has_
 				}
 				individual.setFID(rs.getInt("ogc_fid"));
 				individual.setValues(values);
+				individual.setValueString(stringValues);
 				individual.setDataPropertyNames(DataPropertyNames);
 				// add to individuals
 				individuals.add(individual);

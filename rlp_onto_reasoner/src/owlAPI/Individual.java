@@ -7,6 +7,7 @@ public class Individual {
 	private String description;
 	private ArrayList<String> DataPropertyNames;
 	private ArrayList<Number> values;
+	private ArrayList<String> stringValues;
 
 	public void setFID(Integer number) {
 		this.FID = number;
@@ -24,6 +25,10 @@ public class Individual {
 		return description;
 	}
 
+	public void setValueString(ArrayList<String> rawValues) {
+		this.stringValues = rawValues;
+	}
+	
 	public void setValues(ArrayList<Number> rawValues) {
 		this.values = rawValues;
 	}
@@ -34,5 +39,9 @@ public class Individual {
 
 	public void setDataPropertyNames(ArrayList<String> DataPropertyNames) {
 		this.DataPropertyNames = DataPropertyNames;
+	}
+
+	public ArrayList<String> getStringValues() {
+		return stringValues;
 	}
 }
