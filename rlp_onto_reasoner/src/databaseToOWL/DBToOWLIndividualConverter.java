@@ -8,7 +8,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 
 import org.semanticweb.owlapi.model.IRI;
@@ -62,6 +62,7 @@ public class DBToOWLIndividualConverter {
 						rulesDir, IRI.create(owlFile.toURI()), numRules);
 				rulesMap = therules.CSVRulesConverter();
 			}
+			/* if another parameter? */
 			ontWrite.writeAll(classes, individuals, rulesMap, colName,
 					IRI.create(owlFile.toURI()), IRI.create(ontologyIRI));
 		}
@@ -152,10 +153,8 @@ public class DBToOWLIndividualConverter {
 			}
 			// System.out.println("RS size: ");
 			while (rs.next()) {
-				// System.out.println("RS");
-				ArrayList<Number> values = new ArrayList<Number>();
-				ArrayList<String> stringValues = new ArrayList<String>();
-				ArrayList<String> DataPropertyNames = new ArrayList<String>();
+				HashMap<String, String> stringValues = new HashMap<String, String>();
+				HashMap<String, Number> values = new HashMap<String, Number>();
 				Individual individual = new Individual();
 				for (int i = 1; i <= colCount; i++) {
 					String colName = rsmd.getColumnName(i);
@@ -166,19 +165,14 @@ public class DBToOWLIndividualConverter {
 						if (myValue == null){
 							myValue = "";
 						}
-							stringValues.add(rs.getString(colName));
-							DataPropertyNames.add("has_" + colName); // has_	
-						//System.out.println("colname: " + colName + " property: " + rs.getString(colName));
+						stringValues.put("has_"+ colName, myValue);
 					} else if (rsmd.getColumnType(i) == java.sql.Types.DOUBLE){
-						values.add(rs.getDouble(colName));
-						DataPropertyNames.add("has_" + colName); // has_
-						//System.out.println("colname: " + colName + " property: " + rs.getDouble(colName));
+						values.put("has_"+ colName, rs.getDouble(colName));
 					}
 				}
 				individual.setFID(rs.getInt("ogc_fid"));
 				individual.setValues(values);
 				individual.setValueString(stringValues);
-				individual.setDataPropertyNames(DataPropertyNames);
 				// add to individuals
 				individuals.add(individual);
 				// System.out.println(individual.getDataPropertyNames() + " : "

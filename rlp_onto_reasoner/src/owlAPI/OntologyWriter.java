@@ -91,14 +91,14 @@ public class OntologyWriter {
 			OWLNamedIndividual obj = factory.getOWLNamedIndividual(
 					"#" + ind.getFID(), pm);
 
-			for (Number value : ind.getValues()) {
+			for (Entry<String, Number> entry : ind.getValues().entrySet()){
 				OWLDataProperty dataProp = factory.getOWLDataProperty("#"
-						+ ind.getDataPropertyNames().get(index), pm);
+						+ entry.getKey(), pm);
 
 				OWLDatatype doubleDatatype = factory
 						.getOWLDatatype(OWL2Datatype.XSD_DOUBLE.getIRI());
 
-				OWLLiteral literal = factory.getOWLLiteral(value.toString(),
+				OWLLiteral literal = factory.getOWLLiteral(entry.getValue().toString(),
 						doubleDatatype);
 
 				OWLDataPropertyAssertionAxiom dataPropertyAssertion = factory
@@ -108,13 +108,14 @@ public class OntologyWriter {
 				index = index + 1;
 			}
 			index = 0;
-			for (String value : ind.getStringValues()) {
+			for (Entry<String, String> entry : ind.getStringValues().entrySet()){
 				OWLDataProperty dataProp = factory.getOWLDataProperty("#"
-						+ ind.getDataPropertyNames().get(index), pm);
+						+ entry.getKey(), pm);
 
 				OWLDatatype stringDatatype = factory
 						.getOWLDatatype(OWL2Datatype.XSD_STRING.getIRI());
 				//System.out.println("about to write: " + value);
+				String value = entry.getValue();
 				if (value == null){
 					value = "";
 				}
@@ -208,15 +209,14 @@ public class OntologyWriter {
 
 			OWLNamedIndividual obj = factory.getOWLNamedIndividual(
 					"#" + ind.getFID(), pm);
-
-			for (Number value : ind.getValues()) {
+			for (Entry<String, Number> entry : ind.getValues().entrySet()){
 				OWLDataProperty dataProp = factory.getOWLDataProperty("#"
-						+ ind.getDataPropertyNames().get(index), pm);
+						+ entry.getKey(), pm);
 
 				OWLDatatype integerDatatype = factory
 						.getOWLDatatype(OWL2Datatype.XSD_DOUBLE.getIRI());
 
-				OWLLiteral literal = factory.getOWLLiteral(value.toString(),
+				OWLLiteral literal = factory.getOWLLiteral(entry.getValue().toString(),
 						integerDatatype);
 
 				OWLDataPropertyAssertionAxiom dataPropertyAssertion = factory
