@@ -13,20 +13,21 @@ public class Main {
 		
 		DBToOWLIndividualConverter test = new DBToOWLIndividualConverter();
 		// table to classify on
-		String parameter = "NATFLO_wetness";
-		String tableName = "testing_natflo_class_name_600"; //args[0];
+		String parameter = "NATFLO_usage_intensity";
+		String tableName = "testing_natflo_usage_intensity_600"; //args[0];
 		// SEaTH rules to use
-		String rulesDir = "c:/Users/Moran/test-rlp/SEaTH/natflo_wetness_class_name_200_seath";
+		//String rulesDir = "c:/Users/Moran/test-rlp/SEaTH/natflo_wetness_class_name_200_seath";
+		String rule = "/home/niklasmoran/test-rlp/scikit-learn/training_natflo_usage_intensity_rules.csv";
 		// DT rule to use.
         //String rule = "c:/Users/Moran/test-rlp/scikit-learn_rules/saarburg_training_14_DT_rules.csv";
-        String rule = "c:/Users/Moran/test-rlp/WEKA/testing_natflo_wetness_vegetation_type_1_CART.csv";
+        //String rule = "c:/Users/Moran/test-rlp/WEKA/testing_natflo_wetness_vegetation_type_1_CART.csv";
         //String rule = "c:/Users/Moran/tubCloud/Thesis/dt_natflo_slope_rules.csv";
         //argmin_DT_3_rules.csv";
 		// number of rules to use
 		int numRules = 10;	
 		//System.out.println("About to create OWL file from table: " + tableName);
-		File owlFile = test.convertDB(tableName, rulesDir, "seath", numRules, parameter); // , fields);
-		//File owlFile = new File("C:/Users/Moran/ontologies/saarburg_testing_600_16PART_rules.owl");
+		File owlFile = test.convertDB(tableName, rule, "dt", numRules, parameter); // , fields);
+		// File owlFile = new File("/home/niklasmoran/ontologies/testing_natflo_wetness_class_name_600_8dt_rules.owl");
 		String resultsTbl = owlFile.getName();
 		resultsTbl = resultsTbl.substring(0, resultsTbl.lastIndexOf("."));
 		resultsTbl = resultsTbl + "_results";

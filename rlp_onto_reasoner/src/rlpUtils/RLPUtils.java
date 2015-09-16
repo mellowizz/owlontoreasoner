@@ -11,7 +11,7 @@ public class RLPUtils {
 
 	public static ArrayList<String> getDistinctValuesFromTbl(String tableName, String colName) throws SQLException{
 		ArrayList<String> columnValues = new ArrayList<String>();
-		String url = "jdbc:postgresql://localhost/RLP?user=postgres&password=BobtheBuilder";
+		String url = "jdbc:postgresql://localhost/postgres?user=postgres&password=BobtheBuilder";
 		Statement st = null;
 		Connection db = null;
 		try {

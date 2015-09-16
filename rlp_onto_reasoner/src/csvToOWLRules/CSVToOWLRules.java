@@ -56,7 +56,7 @@ public class CSVToOWLRules {
 			System.err.println("error: file doesn't end in .csv");
 		}
         reader = new CSVReader(new FileReader(csvFile));
-        List<String> classNames = Arrays.asList("aquatic", "dry", "mesic", "very_wet"); 
+        List<String> classNames = Arrays.asList("aquatic", "dry", "mesic", "wet/very_wet"); 
         String[] nextLine;
         OWLDatatypeRestriction newRestriction = null;
         OWLDataProperty hasParameter = null;

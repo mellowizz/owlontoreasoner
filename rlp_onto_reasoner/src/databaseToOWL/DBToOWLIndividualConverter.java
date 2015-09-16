@@ -29,14 +29,29 @@ public class DBToOWLIndividualConverter {
 			Integer numRules) throws SQLException, IOException {
 		return convertDB(tableName, rulesDir, algorithm, numRules, "NATFLO_wetness");
 	}
+	public boolean IsPathDirectory(String myPath) {
+	    File test = new File(myPath);
+
+	    // check if the file/directory is already there
+	    if (!test.exists()) {
+	        // see if the file portion it doesn't have an extension
+	        return test.getName().lastIndexOf('.') == -1;
+	    } else {
+	        // see if the path that's already in place is a file or directory
+	        return test.isDirectory();
+	    }
+	}
+
 
 	public File convertDB(String tableName, String rulesDir, String algorithm,
 			Integer numRules, String colName) 
 			throws SQLException, IOException {
 		LinkedHashSet<Individual> individuals;
 		LinkedHashSet<OntologyClass> classes;
-		File owlFile = new File("C:/Users/Moran/ontologies/" + tableName + "_"
+		File owlFile = new File("/home/niklasmoran/ontologies/" + tableName + "_"
 				+ numRules + algorithm + "_rules.owl");
+		//File owlFile = new File("C:/Users/Moran/ontologies/" + tableName + "_"
+		//		+ numRules + algorithm + "_rules.owl");
 		try {
 			// create ontology
 			OntologyCreator ontCreate = new OntologyCreator();
@@ -52,24 +67,28 @@ public class DBToOWLIndividualConverter {
 			File file = new File(rulesDir);
 			/* TODO: cleanup! */
 			OWLmap rulesMap = null;
-			if (file.isFile()) {
-				CSVToOWLRules therules = new CSVToOWLRules(rulesDir,
-						IRI.create(owlFile.toURI()), numRules);
-				rulesMap = therules.CSVRules();
-			} else {
+			/*if (file.isDirectory()) {
 				System.out.println("directory!");
 				CSVToOWLRulesConverter therules = new CSVToOWLRulesConverter(
 						rulesDir, IRI.create(owlFile.toURI()), numRules);
 				rulesMap = therules.CSVRulesConverter();
-			}
+			} else if (file.isFile()) {*/
+				CSVToOWLRules therules = new CSVToOWLRules(rulesDir,
+						IRI.create(owlFile.toURI()), numRules);
+				rulesMap = therules.CSVRules();
+			/*} else{
+				System.out.println("can't determine if file or directory!");
+			}*/
 			/* if another parameter? */
 			ontWrite.writeAll(classes, individuals, rulesMap, colName,
 					IRI.create(owlFile.toURI()), IRI.create(ontologyIRI));
 		}
+		catch (NullPointerException mye){
+			throw new NullPointerException(mye.getMessage());
+		}
 		catch (OWLOntologyStorageException e2) {
 			throw new RuntimeException(e2.getMessage(), e2);
 		}
-
 		catch (OWLOntologyCreationException e) {
 			throw new RuntimeException(e.getMessage(), e);
 		} finally {
@@ -86,7 +105,7 @@ public class DBToOWLIndividualConverter {
 	public LinkedHashSet<OntologyClass> createClassesfromDB(String tableName,
 			String colName) throws IOException, SQLException {
 		/* Read from DB */
-		String url = "jdbc:postgresql://localhost/RLP?user=postgres&password=BobtheBuilder";
+		String url = "jdbc:postgresql://localhost/postgres?user=postgres&password=BobtheBuilder";
 		Statement st = null;
 		Connection db = null;
 		LinkedHashSet<OntologyClass> eunisClasses = new LinkedHashSet<OntologyClass>();
@@ -134,7 +153,7 @@ public class DBToOWLIndividualConverter {
 			throws SQLException {
 		/* Read from DB */
 		System.out.println("getting object values from DB!");
-		String url = "jdbc:postgresql://localhost/RLP?user=postgres&password=BobtheBuilder";
+		String url = "jdbc:postgresql://localhost/postgres?user=postgres&password=BobtheBuilder";
 		LinkedHashSet<Individual> individuals = new LinkedHashSet<Individual>();
 		Statement st = null;
 		Connection db = null;
@@ -160,7 +179,8 @@ public class DBToOWLIndividualConverter {
 					String colName = rsmd.getColumnName(i);
 					if (colName.endsWith("id")){
 						continue;
-					} else if (colName.startsWith("NATFLO") || colName.startsWith("EUNIS") || colName.startsWith("EAGLE")){
+					} else if (colName.startsWith("NATFLO") || colName.startsWith("EUNIS") || colName.startsWith("EAGLE") || colName.equals("Class_name")){
+						//if (rsmd.getColumnType(i) == java.sql.Types.VARCHAR){
 						String myValue = rs.getString(colName);
 						if (myValue == null){
 							myValue = "";

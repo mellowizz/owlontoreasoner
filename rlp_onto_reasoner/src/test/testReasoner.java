@@ -39,7 +39,7 @@ public class testReasoner {
 		Connection con = null;
 		Statement st = null;
 		ResultSet rs = null;
-		String url = "jdbc:postgresql://localhost/RLP";
+		String url = "jdbc:postgresql://localhost/postgres";
 		String user = "postgres";
 		String password = "BobtheBuilder";
 	    ResultSet validClass = null;	
