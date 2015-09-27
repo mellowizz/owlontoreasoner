@@ -1,14 +1,12 @@
 package dict;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 public class defaultDict<K, V> extends HashMap<K, V> {
 
     Class<V> klass;
-    public defaultDict(Class klass) {
-        this.klass = klass;    
+    public defaultDict(Class class1) {
+        this.klass = class1;    
     }
 
     @Override
