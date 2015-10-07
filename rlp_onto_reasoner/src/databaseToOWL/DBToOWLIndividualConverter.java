@@ -65,20 +65,19 @@ public class DBToOWLIndividualConverter {
 					+ " # of individuals : " + individuals.size());
 			OntologyWriter ontWrite = new OntologyWriter(); // IRI.create(owlFile.toURI()));
 			File file = new File(rulesDir);
-			/* TODO: cleanup! */
 			OWLmap rulesMap = null;
-			/*if (file.isDirectory()) {
+			if (file.isDirectory()) {
 				System.out.println("directory!");
 				CSVToOWLRulesConverter therules = new CSVToOWLRulesConverter(
 						rulesDir, IRI.create(owlFile.toURI()), numRules);
 				rulesMap = therules.CSVRulesConverter();
-			} else if (file.isFile()) {*/
+			} else if (file.isFile()) {
 				CSVToOWLRules therules = new CSVToOWLRules(rulesDir,
 						IRI.create(owlFile.toURI()), numRules);
 				rulesMap = therules.CSVRules();
-			/*} else{
+			} else{
 				System.out.println("can't determine if file or directory!");
-			}*/
+			}
 			/* if another parameter? */
 			ontWrite.writeAll(classes, individuals, rulesMap, colName,
 					IRI.create(owlFile.toURI()), IRI.create(ontologyIRI));
