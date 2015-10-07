@@ -24,10 +24,22 @@ import csvToOWLRules.CSVToOWLRules;
 import csvToOWLRules.CSVToOWLRulesConverter;
 
 public class DBToOWLIndividualConverter {
-
-	public File convertDB(String tableName, String rulesDir, String algorithm,
-			Integer numRules) throws SQLException, IOException {
-		return convertDB(tableName, rulesDir, algorithm, numRules, "NATFLO_wetness");
+	private Connection dbConn = null;
+	private String tableName = null;
+	private String parameter;
+	private String rule;
+	private String colName;
+	private int numRules;
+	private String algorithm;
+	
+	public DBToOWLIndividualConverter(String url, String tableName, String parameter, String rule, String colName, int numRules, String algorithm) throws SQLException{
+		this.dbConn = DriverManager.getConnection(url);
+		this.tableName = tableName;
+		this.parameter = parameter;
+		this.rule = rule;
+		this.colName = colName;
+		this.numRules = numRules;
+		this.algorithm = algorithm;
 	}
 	public boolean IsPathDirectory(String myPath) {
 	    File test = new File(myPath);
@@ -43,15 +55,11 @@ public class DBToOWLIndividualConverter {
 	}
 
 
-	public File convertDB(String tableName, String rulesDir, String algorithm,
-			Integer numRules, String colName) 
-			throws SQLException, IOException {
+	public File convertDB() throws NumberFormatException, IOException, SQLException{ 
 		LinkedHashSet<Individual> individuals;
 		LinkedHashSet<OntologyClass> classes;
-		File owlFile = new File("/home/niklasmoran/ontologies/" + tableName + "_"
-				+ numRules + algorithm + "_rules.owl");
-		//File owlFile = new File("C:/Users/Moran/ontologies/" + tableName + "_"
-		//		+ numRules + algorithm + "_rules.owl");
+		File owlFile = new File("/home/niklasmoran/ontologies/" + this.tableName + "_"
+				+ numRules + this.algorithm + "_rules.owl");
 		try {
 			// create ontology
 			OntologyCreator ontCreate = new OntologyCreator();
@@ -59,20 +67,20 @@ public class DBToOWLIndividualConverter {
 					+ owlFile.getName().trim();
 			ontCreate.createOntology(ontologyIRI, "version_1_0", owlFile);
 			/* get classes and individuals */
-			classes = createClassesfromDB(tableName, colName);
-			individuals = createIndividualsFromDB(tableName);
+			classes = createClassesfromDB(); //this.tableName, colName);
+			individuals = createIndividualsFromDB(); //tableName);
 			System.out.println("# of classes: " + classes.size()
 					+ " # of individuals : " + individuals.size());
 			OntologyWriter ontWrite = new OntologyWriter(); // IRI.create(owlFile.toURI()));
-			File file = new File(rulesDir);
+			File file = new File(this.rule);
 			OWLmap rulesMap = null;
 			if (file.isDirectory()) {
 				System.out.println("directory!");
 				CSVToOWLRulesConverter therules = new CSVToOWLRulesConverter(
-						rulesDir, IRI.create(owlFile.toURI()), numRules);
+						this.rule, IRI.create(owlFile.toURI()), this.numRules);
 				rulesMap = therules.CSVRulesConverter();
 			} else if (file.isFile()) {
-				CSVToOWLRules therules = new CSVToOWLRules(rulesDir,
+				CSVToOWLRules therules = new CSVToOWLRules(this.rule,
 						IRI.create(owlFile.toURI()), numRules);
 				rulesMap = therules.CSVRules();
 			} else{
@@ -96,30 +104,22 @@ public class DBToOWLIndividualConverter {
 		return owlFile;
 	}
 
-	public LinkedHashSet<OntologyClass> createClassesfromDB(String tableName)
-			throws IOException, SQLException {
-		return createClassesfromDB(tableName, "wetness");
-	}
-
-	public LinkedHashSet<OntologyClass> createClassesfromDB(String tableName,
-			String colName) throws IOException, SQLException {
+	public LinkedHashSet<OntologyClass> createClassesfromDB() throws SQLException{ //String tableName,
+			//String colName) throws IOException, SQLException {
 		/* Read from DB */
-		String url = "jdbc:postgresql://localhost/postgres?user=postgres&password=BobtheBuilder";
 		Statement st = null;
-		Connection db = null;
 		LinkedHashSet<OntologyClass> eunisClasses = new LinkedHashSet<OntologyClass>();
 		try {
-			db = DriverManager.getConnection(url);
-			st = db.createStatement();
-			ResultSet rs = st.executeQuery("SELECT DISTINCT( \"" + colName
+			st = this.dbConn.createStatement();
+			ResultSet rs = st.executeQuery("SELECT DISTINCT( \"" + this.colName
 					+ "\") FROM " + tableName); 
 			while (rs.next()) {
-				String parameter = rs.getString(colName);
+				String parameter = rs.getString(this.colName);
 				if (parameter == null) {
 					continue;
 				}
 				OntologyClass eunisObj = new OntologyClass();
-				System.out.println(colName);
+				System.out.println(this.colName);
 				//System.out.println(parameter);
 				if (parameter.contains(" ")) {
 					parameter = parameter.replace(" ", "_");
@@ -148,22 +148,19 @@ public class DBToOWLIndividualConverter {
 		return eunisClasses;
 	}
 
-	private LinkedHashSet<Individual> createIndividualsFromDB(String tableName)
-			throws SQLException {
+	private LinkedHashSet<Individual> createIndividualsFromDB() throws SQLException{ //String tableName)
+			//throws SQLException {
 		/* Read from DB */
 		System.out.println("getting object values from DB!");
-		String url = "jdbc:postgresql://localhost/postgres?user=postgres&password=BobtheBuilder";
 		LinkedHashSet<Individual> individuals = new LinkedHashSet<Individual>();
 		Statement st = null;
-		Connection db = null;
 		ResultSet rs = null;
 		ResultSetMetaData rsmd = null;
 
 		try {
-			db = DriverManager.getConnection(url);
-			st = db.createStatement();
-			System.out.println("tableName: " + tableName);
-			rs = st.executeQuery("SELECT * FROM \"" + tableName + "\""); // rlp_all_small
+			st = dbConn.createStatement();
+			System.out.println("tableName: " + this.tableName);
+			rs = st.executeQuery("SELECT * FROM \"" + this.tableName + "\""); // rlp_all_small
 			rsmd = rs.getMetaData();
 			int colCount = rsmd.getColumnCount();
 			if (rsmd == null || colCount == 0 || rs == null) {
