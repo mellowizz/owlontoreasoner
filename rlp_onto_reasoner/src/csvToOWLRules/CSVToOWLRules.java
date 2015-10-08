@@ -24,6 +24,7 @@ import org.semanticweb.owlapi.model.OWLOntologyStorageException;
 
 import owlAPI.OWLmap;
 import owlAPI.OWLmap.owlRuleSet;
+import rlpUtils.RLPUtils;
 
 import com.opencsv.CSVReader;
 
@@ -39,7 +40,7 @@ public class CSVToOWLRules {
 		this.numRules = numberOfRules;
 	}
 
-	public OWLmap CSVRules() 
+	public OWLmap CSVRules(ArrayList<String> arrayList) 
 			throws OWLOntologyCreationException, NumberFormatException,
 			IOException, OWLOntologyStorageException {
 		final FileNameExtensionFilter extensionFilter = new FileNameExtensionFilter(
@@ -56,7 +57,6 @@ public class CSVToOWLRules {
 			System.err.println("error: file doesn't end in .csv");
 		}
         reader = new CSVReader(new FileReader(csvFile));
-        List<String> classNames = Arrays.asList("aquatic", "dry", "mesic", "wet/very_wet"); 
         String[] nextLine;
         OWLDatatypeRestriction newRestriction = null;
         OWLDataProperty hasParameter = null;
@@ -66,7 +66,7 @@ public class CSVToOWLRules {
         /* only have rules that have more than 2 parameters? */
         while ((nextLine = reader.readNext()) != null){
             String parameter = nextLine[0]; /* why has_? */
-            if (classNames.contains(parameter)){
+            if (arrayList.contains(parameter)){
                 /* add collected rules to class and clear rulesList */
             	try{
                     OWLmap.owlRuleSet rule = new OWLmap.owlRuleSet (parameter, ruleCounter);

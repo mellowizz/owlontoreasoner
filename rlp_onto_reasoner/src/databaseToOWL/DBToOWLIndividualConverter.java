@@ -91,7 +91,7 @@ public class DBToOWLIndividualConverter {
 			} else if (file.isFile()) {
 				CSVToOWLRules therules = new CSVToOWLRules(this.rule,
 						IRI.create(owlFile.toURI()), numRules);
-				rulesMap = therules.CSVRules();
+				rulesMap = therules.CSVRules(RLPUtils.getDistinctValuesFromTbl(this.tableName, this.colName));
 			} else{
 				System.out.println("can't determine if file or directory!");
 			}
