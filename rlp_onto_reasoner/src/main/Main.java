@@ -6,11 +6,12 @@ import java.sql.SQLException;
 
 import test.testReasoner;
 import databaseToOWL.DBToOWLIndividualConverter;
+import rlpUtils.RLPUtils;
 
 public class Main {
 	
 	public static void main(String[] args) throws SQLException, IOException{
-		
+		RLPUtils.getOsName();
 		// table to classify on
 		String parameter = "NATFLO_homogeneity";
 		String tableName = "testing_natflo_homogeneity_600"; //args[0];

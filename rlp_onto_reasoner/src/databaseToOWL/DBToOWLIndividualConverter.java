@@ -8,6 +8,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 
@@ -15,13 +16,14 @@ import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyStorageException;
 
+import csvToOWLRules.CSVToOWLRules;
+import csvToOWLRules.CSVToOWLRulesConverter;
 import owlAPI.Individual;
 import owlAPI.OWLmap;
 import owlAPI.OntologyClass;
 import owlAPI.OntologyCreator;
 import owlAPI.OntologyWriter;
-import csvToOWLRules.CSVToOWLRules;
-import csvToOWLRules.CSVToOWLRulesConverter;
+import rlpUtils.RLPUtils;
 
 public class DBToOWLIndividualConverter {
 	private Connection dbConn = null;
@@ -53,12 +55,19 @@ public class DBToOWLIndividualConverter {
 	        return test.isDirectory();
 	    }
 	}
-
-
 	public File convertDB() throws NumberFormatException, IOException, SQLException{ 
 		LinkedHashSet<Individual> individuals;
 		LinkedHashSet<OntologyClass> classes;
-		File owlFile = new File("/home/niklasmoran/ontologies/" + this.tableName + "_"
+		String ontoFolder = null;
+		if (RLPUtils.isLinux()){
+			ontoFolder = "/home/niklasmoran/ontologies/"; 
+		} else if (RLPUtils.isWindows()){
+			ontoFolder = "C:/Users/Moran/ontologies/"; 
+		}
+		else{
+			System.out.println("Sorry, unsupported OS!");
+		}
+		File owlFile = new File(ontoFolder + this.tableName + "_"
 				+ numRules + this.algorithm + "_rules.owl");
 		try {
 			// create ontology
@@ -103,7 +112,6 @@ public class DBToOWLIndividualConverter {
 		}
 		return owlFile;
 	}
-
 	public LinkedHashSet<OntologyClass> createClassesfromDB() throws SQLException{ //String tableName,
 			//String colName) throws IOException, SQLException {
 		/* Read from DB */
@@ -147,9 +155,7 @@ public class DBToOWLIndividualConverter {
 
 		return eunisClasses;
 	}
-
 	private LinkedHashSet<Individual> createIndividualsFromDB() throws SQLException{ //String tableName)
-			//throws SQLException {
 		/* Read from DB */
 		System.out.println("getting object values from DB!");
 		LinkedHashSet<Individual> individuals = new LinkedHashSet<Individual>();

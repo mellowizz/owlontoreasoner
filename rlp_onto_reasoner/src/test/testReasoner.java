@@ -25,6 +25,7 @@ import org.semanticweb.owlapi.reasoner.OWLReasoner;
 import rlpUtils.RLPUtils;
 import uk.ac.manchester.cs.factplusplus.owlapiv3.FaCTPlusPlusReasonerFactory;
 
+
 import com.google.common.base.Joiner;
 
 import dict.defaultDict;
@@ -39,12 +40,10 @@ public class testReasoner {
 		Connection con = null;
 		Statement st = null;
 		ResultSet rs = null;
-		String url = "jdbc:postgresql://localhost/postgres";
-		String user = "postgres";
-		String password = "BobtheBuilder";
+		String url = "jdbc:postgresql://localhost:5432/RLP?user=postgres&password=BobtheBuilder";
 	    ResultSet validClass = null;	
 		try {
-			con = DriverManager.getConnection(url, user, password);
+			con = DriverManager.getConnection(url);
 			con.setAutoCommit(false);
 			st = con.createStatement();
 			//String validationTable = tableName + "_results";
