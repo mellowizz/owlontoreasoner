@@ -1,4 +1,6 @@
 eclipse.preferences.version=1
+encoding//src/sql_utils/commonutils.py=utf-8
+encoding//src/sql_utils/confusion_matrix.py=utf-8
 encoding//src/sql_utils/data_mining_module.py=utf-8
 encoding//src/sql_utils/database/PostGISDatabase.py=utf-8
 encoding//src/sql_utils/sql_utilities.py=utf-8
