@@ -13,15 +13,16 @@ public class Main {
 	public static void main(String[] args) throws SQLException, IOException{
 		RLPUtils.getOsName();
 		// table to classify on
-		String parameter = "NATFLO_usage_intensity";
+		String parameter = "natflo_wetness";
 		String tableName = "testing_" + parameter.toLowerCase() + "_600";
 		//String tableName = "testing_natflo_depression"; //args[0];
-        String rule = "c:/Users/Moran/test-rlp/scikit-learn_rules/training_natflo_usage_intensity_200.csv";
+        String rule = "c:/Users/Moran/test-rlp/scikit-learn_rules/training_natflo_wetness_200.csv";
         //String ruleDir = "c:/Users/Moran/test-rlp/SEaTH/natflo_slope_position_200_seath";
 		int numRules = 10;
 		String algorithm = "dt";
 		String colName = parameter;
-		DBToOWLIndividualConverter test = new DBToOWLIndividualConverter("jdbc:postgresql://localhost:5432/RLP?user=postgres&password=BobtheBuilder",
+		//AddIndividuals 
+		DBToOWLIndividualConverter test = new DBToOWLIndividualConverter("jdbc:postgresql://localhost:5432/RLP?user=postgres", //&password=BobtheBuilder",
 				tableName, parameter, rule, colName, numRules, algorithm);
 		File owlFile = test.convertDB(); //tableName, rule, "dt", numRules, parameter); // , fields);
 		String resultsTbl = owlFile.getName();

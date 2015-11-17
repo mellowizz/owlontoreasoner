@@ -36,12 +36,15 @@ public class RLPUtils {
 		try {
 			db = DriverManager.getConnection(url);
 			st = db.createStatement();
-			String myQuery = String.format("SELECT DISTINCT( \"%s\") as parameter FROM \"%s\" where \"%s\" != ''", colName, tableName, colName); 
+			String myQuery = String.format("SELECT DISTINCT( \"%s\") as param "
+							 			 + "FROM \"%s\" "
+							 			 + "WHERE\"%s\" != ''",
+							 			 colName, tableName, colName); 
 			System.out.println(myQuery);
 			ResultSet rs = st.executeQuery(myQuery);
 			while (rs.next()) {
 				String quotedColName = "\""+colName + "\"";
-				String parameter = rs.getString("parameter"); //quotedColName);
+				String parameter = rs.getString("param"); //quotedColName);
 				if (parameter == null){ 
 					System.out.println("parameter == NULL!");
 					continue;
