@@ -19,6 +19,16 @@ public class OntologyCreator {
 	 * Creates ontology with onotology IRI and saves it to input OWL File
 	 */
 
+	public void loadOntology(String ontologyIRIasString, String version,
+			File owlFile) throws OWLOntologyCreationException, OWLOntologyStorageException{
+		OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
+		
+		IRI ontologyIRI = IRI.create(ontologyIRIasString);
+
+		IRI documentIRI = IRI.create(owlFile);
+		OWLOntology ontology = manager.loadOntologyFromOntologyDocument(owlFile);
+		save(ontologyIRI, ontology, owlFile);
+	}
 	public void createOntology(String ontologyIRIasString, String version,
 			File owlFile) throws OWLOntologyCreationException,
 			OWLOntologyStorageException {
@@ -49,7 +59,7 @@ public class OntologyCreator {
 			throws OWLOntologyCreationException, OWLOntologyStorageException {
 
 		OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
-
+		// OWLAPI 4 - new OWLXMLDocumentFormat()
 		OWLXMLOntologyFormat owlxmlFormat = new OWLXMLOntologyFormat();
 		/* Save OWL to file*/
 		manager.saveOntology(ontology, owlxmlFormat,

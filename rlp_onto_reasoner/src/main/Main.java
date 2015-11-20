@@ -14,17 +14,19 @@ public class Main {
 		RLPUtils.getOsName();
 		// table to classify on
 		String parameter = "natflo_wetness";
-		String tableName = "testing_" + parameter.toLowerCase() + "_600";
+		String tableName = "test";
 		//String tableName = "testing_natflo_depression"; //args[0];
-        String rule = "c:/Users/Moran/test-rlp/scikit-learn_rules/training_natflo_wetness_200.csv";
+        String rule = "c:/Users/Moran/test-rlp/sci-kit_rules/" + parameter + ".csv";
+        System.out.println("using rule: "+ rule);
         //String ruleDir = "c:/Users/Moran/test-rlp/SEaTH/natflo_slope_position_200_seath";
-		int numRules = 10;
+		int numRules = 8;
 		String algorithm = "dt";
 		String colName = parameter;
 		//AddIndividuals 
-		DBToOWLIndividualConverter test = new DBToOWLIndividualConverter("jdbc:postgresql://localhost:5432/RLP?user=postgres", //&password=BobtheBuilder",
+		DBToOWLIndividualConverter test = new DBToOWLIndividualConverter("jdbc:postgresql://localhost:5432/rlp_spatial?user=postgres&password=BobtheBuilder",
 				tableName, parameter, rule, colName, numRules, algorithm);
-		File owlFile = test.convertDB(); //tableName, rule, "dt", numRules, parameter); // , fields);
+		File owl = new File("C:/Users/Moran/tubCloud/grassland.owl");
+		File owlFile = test.convertDB(owl); //tableName, rule, "dt", numRules, parameter); // , fields);
 		String resultsTbl = owlFile.getName();
 		resultsTbl = resultsTbl.substring(0, resultsTbl.lastIndexOf("."));
 		resultsTbl = resultsTbl + "_results";
