@@ -1,5 +1,6 @@
 package owlAPI;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -46,7 +47,8 @@ public class OntologyWriter {
 	 * manager.loadOntologyFromOntologyDocument(documentIRI); factory =
 	 * manager.getOWLDataFactory(); }
 	 */
-	public void writeAll(LinkedHashSet<Individual> individuals, OWLmap rules, String colName, IRI documentIRI,
+	public void writeAll(LinkedHashSet<Individual> individuals, OWLmap rules, 
+			String colName, IRI documentIRI,
 			IRI ontologyIRI) throws OWLOntologyCreationException,
 			OWLOntologyStorageException {
 		OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
@@ -59,8 +61,10 @@ public class OntologyWriter {
 																			
 		OWLClass parameter = factory.getOWLClass(IRI.create(ontologyIRI
 				+ "#" + colName));
-		System.out.println("# of individuals: " + individuals.size());
+		System.out.println("# of individuals: " + individuals.size() + 
+				" param: " +colName);
 
+		System.out.println("going over individuals..");
 		for (Individual ind : individuals) {
 			Integer index = 0;
 
@@ -106,6 +110,7 @@ public class OntologyWriter {
 			}
 		}
 		/* write rules */
+		System.out.println("About to write Rules..");
 		OWLClassExpression firstRuleSet= null;
 		OWLClass owlCls = null;
 		OWLObjectUnionOf totalunion = null;
@@ -126,6 +131,7 @@ public class OntologyWriter {
 		}
 		manager.saveOntology(ontology);	
 	}
+	
 	public void writeAll(LinkedHashSet<OntologyClass> classes,
 			LinkedHashSet<Individual> individuals, OWLmap rules, String colName, IRI documentIRI,
 			IRI ontologyIRI) throws OWLOntologyCreationException,
@@ -209,6 +215,7 @@ public class OntologyWriter {
 			Map.Entry pair = (Map.Entry) it.next();
 			String currCls = (String) pair.getKey();
 			owlCls = factory.getOWLClass(IRI.create("#" + currCls ));
+			System.out.println("CurrCls for rule: " + currCls);
 			ArrayList<owlRuleSet> currRuleset = (ArrayList<owlRuleSet>) pair.getValue();
 			for (int i=0; i< currRuleset.size(); i++){
 				firstRuleSet = factory.getOWLObjectIntersectionOf(currRuleset.get(i).getRuleList(currCls));

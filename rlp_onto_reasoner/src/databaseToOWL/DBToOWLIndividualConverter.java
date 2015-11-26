@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 
+import org.apache.commons.io.FilenameUtils;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
 import org.semanticweb.owlapi.model.OWLOntologyStorageException;
@@ -28,22 +29,26 @@ import rlpUtils.RLPUtils;
 public class DBToOWLIndividualConverter {
 	private Connection dbConn = null;
 	private String tableName = null;
-	private String parameter;
+	//private String parameter;
 	private String rule;
-	private String colName;
+	//private String colName;
 	private int numRules;
 	private String algorithm;
+	private File ruleDir;
+	private File owlOut;
+	private ArrayList<String> rulesList;
 
+	//String parameter, 
 	public DBToOWLIndividualConverter(String url, String tableName, 
-			String parameter, String rule, String colName,
-			int numRules, String algorithm) throws SQLException {
+			File ruleDir, int numRules, String algorithm,
+			ArrayList<String> rulesList, File owlOut) throws SQLException {
 		this.dbConn = DriverManager.getConnection(url);
 		this.tableName = tableName;
-		this.parameter = parameter;
-		this.rule = rule;
-		this.colName = colName;
+		this.ruleDir = ruleDir;
 		this.numRules = numRules;
 		this.algorithm = algorithm;
+		this.rulesList = rulesList;
+		this.owlOut = owlOut;
 	}
 
 	public boolean IsPathDirectory(String myPath) {
@@ -58,58 +63,7 @@ public class DBToOWLIndividualConverter {
 			return test.isDirectory();
 		}
 	}
-
-	public File convertDB(File owlFile) throws NumberFormatException, IOException, SQLException {
-		LinkedHashSet<Individual> individuals;
-		LinkedHashSet<OntologyClass> classes;
-		String ontoFolder = null;
-		if (RLPUtils.isLinux()) {
-			ontoFolder = "/home/niklasmoran/ontologies/";
-		} else if (RLPUtils.isWindows()) {
-			ontoFolder = "C:/Users/Moran/ontologies/";
-		} else {
-			System.out.println("Sorry, unsupported OS!");
-		}
-		try {
-			// create ontology
-			OntologyCreator ontCreate = new OntologyCreator();
-			String ontologyIRI = "http://www.user.tu-berlin.de/niklasmoran/" + owlFile.getName().trim();
-			ontCreate.loadOntology(ontologyIRI, "version_1_0", owlFile);
-			//ontologyIRI, "version_1_0", owlFile);
-			/* get classes and individuals */
-			//classes = createClassesfromDB(); // this.tableName, colName);
-			individuals = createIndividualsFromDB(); // tableName);
-			//System.out.println("# of classes: " + classes.size() + " # of individuals : " + individuals.size());
-			OntologyWriter ontWrite = new OntologyWriter(); // IRI.create(owlFile.toURI()));
-			File file = new File(this.rule);
-			OWLmap rulesMap = null;
-			if (file.isDirectory()) {
-				System.out.println("directory!");
-				CSVToOWLRulesConverter therules = new CSVToOWLRulesConverter(this.rule, IRI.create(owlFile.toURI()),
-						this.numRules);
-				rulesMap = therules.CSVRulesConverter();
-			} else if (file.isFile()) {
-				System.out.println("file!");
-				CSVToOWLRules therules = new CSVToOWLRules(this.rule, IRI.create(owlFile.toURI()), numRules);
-				rulesMap = therules.CSVRules(RLPUtils.getDistinctValuesFromTbl(this.tableName, this.colName));
-			} else {
-				System.out.println("can't determine if file or directory!");
-			}
-			/* if another parameter? */
-			ontWrite.writeAll(individuals, rulesMap, colName, IRI.create(owlFile.toURI()),
-					IRI.create(ontologyIRI));
-		} catch (NullPointerException mye) {
-			throw new NullPointerException(mye.getMessage());
-		} catch (OWLOntologyStorageException e2) {
-			throw new RuntimeException(e2.getMessage(), e2);
-		} catch (OWLOntologyCreationException e) {
-			throw new RuntimeException(e.getMessage(), e);
-		} finally {
-			System.out.println("leaving convertDB");
-		}
-		return owlFile;
-	}
-
+	
 	public File convertDB() throws NumberFormatException, IOException, SQLException {
 		LinkedHashSet<Individual> individuals;
 		LinkedHashSet<OntologyClass> classes;
@@ -121,33 +75,73 @@ public class DBToOWLIndividualConverter {
 		} else {
 			System.out.println("Sorry, unsupported OS!");
 		}
-		File owlFile = new File(ontoFolder + this.tableName + "_" + numRules + this.algorithm + "_rules.owl");
+		try {
+			// create ontology
+			OntologyCreator ontCreate = new OntologyCreator();
+			String ontologyIRI = "http://www.user.tu-berlin.de/niklasmoran/grassland.owl";
+			ontCreate.loadOntology(ontologyIRI, "version_1_0", this.owlOut);
+			//ontologyIRI, "version_1_0", owlFile);
+			/* get classes and individuals */
+			classes = createClassesfromDB(); 
+			individuals = createIndividualsFromDB("20000"); // tableName);
+			//System.out.println("# of classes: " + classes.size() + " # of individuals : " + individuals.size());
+			//OntologyWriter ontWrite = new OntologyWriter(); // IRI.create(owlFile.toURI()));
+			//File owlFiles = new File(this.ruleDir);
+			OWLmap rulesMap = null;
+			CSVToOWLRules therules = null;
+			ontCreate.writeAll(classes, individuals, this.rulesList);
+			
+			for (File ruleFile: this.ruleDir.listFiles()){
+				String fileNameNoExt = FilenameUtils.removeExtension(ruleFile.getName());
+				System.out.println("loading rule: " + fileNameNoExt);
+				therules = new CSVToOWLRules(ruleFile, IRI.create(this.owlOut.toURI()), numRules);
+				rulesMap = therules.CSVRules(ruleFile);
+				ontCreate.writeRules(rulesMap, this.owlOut);
+				//RLPUtils.getDistinctValuesFromTbl(this.tableName, ruleFile.getName().split(".")[0]));
+				//ontWrite.writeAll(individuals, rulesMap, fileNameNoExt, IRI.create(this.owlOut.toURI()),
+				//		IRI.create(ontologyIRI));
+				rulesMap = null;
+			}
+			
+		} catch (NullPointerException mye) {
+			throw new NullPointerException(mye.getMessage());
+		} catch (OWLOntologyStorageException e2) {
+			throw new RuntimeException(e2.getMessage(), e2);
+		} catch (OWLOntologyCreationException e) {
+			throw new RuntimeException(e.getMessage(), e);
+		} finally {
+			System.out.println("leaving convertDB");
+		}
+		return this.owlOut; //owlFile;
+	}
+
+	public File convertDB(ArrayList<String> rulesList) throws NumberFormatException, IOException, SQLException {
+		LinkedHashSet<Individual> individuals;
+		LinkedHashSet<OntologyClass> classes;
+		String ontoFolder = null;
+		if (RLPUtils.isLinux()) {
+			ontoFolder = "/home/niklasmoran/ontologies/";
+		} else if (RLPUtils.isWindows()) {
+			ontoFolder = "C:/Users/Moran/ontologies/";
+		} else {
+			System.out.println("Sorry, unsupported OS!");
+		}
+		File owlFile = new File(ontoFolder + "grassland.owl");
 		try {
 			// create ontology
 			OntologyCreator ontCreate = new OntologyCreator();
 			String ontologyIRI = "http://www.user.tu-berlin.de/niklasmoran/" + owlFile.getName().trim();
 			ontCreate.createOntology(ontologyIRI, "version_1_0", owlFile);
-
 			/* get classes and individuals */
-			classes = createClassesfromDB(); // this.tableName, colName);
-			individuals = createIndividualsFromDB(); // tableName);
+			classes = createClassesfromDB(); 
+			individuals = createIndividualsFromDB("80000"); 
 			System.out.println("# of classes: " + classes.size() + " # of individuals : " + individuals.size());
 			OntologyWriter ontWrite = new OntologyWriter(); // IRI.create(owlFile.toURI()));
-			File file = new File(this.rule);
 			OWLmap rulesMap = null;
-			if (file.isDirectory()) {
-				System.out.println("directory!");
-				CSVToOWLRulesConverter therules = new CSVToOWLRulesConverter(this.rule, IRI.create(owlFile.toURI()),
-						this.numRules);
-				rulesMap = therules.CSVRulesConverter();
-			} else if (file.isFile()) {
-				CSVToOWLRules therules = new CSVToOWLRules(this.rule, IRI.create(owlFile.toURI()), numRules);
-				rulesMap = therules.CSVRules(RLPUtils.getDistinctValuesFromTbl(this.tableName, this.colName));
-			} else {
-				System.out.println("can't determine if file or directory!");
-			}
+			CSVToOWLRules therules = new CSVToOWLRules(rulesList, IRI.create(owlFile.toURI()), numRules);
+			rulesMap = therules.CSVRules(RLPUtils.getDistinctValuesFromTbl(this.tableName, this.colName));
 			/* if another parameter? */
-			ontWrite.writeAll(classes, individuals, rulesMap, colName, IRI.create(owlFile.toURI()),
+			ontWrite.writeAll(classes, individuals, rulesMap, IRI.create(owlFile.toURI()),
 					IRI.create(ontologyIRI));
 		} catch (NullPointerException mye) {
 			throw new NullPointerException(mye.getMessage());
@@ -169,29 +163,40 @@ public class DBToOWLIndividualConverter {
 		LinkedHashSet<OntologyClass> eunisClasses = new LinkedHashSet<OntologyClass>();
 		try {
 			st = this.dbConn.createStatement();
-			ResultSet rs = st.executeQuery("SELECT DISTINCT( \"" + this.colName + "\") FROM " + tableName);
-			while (rs.next()) {
-				String parameter = rs.getString(this.colName);
-				if (parameter == null) {
-					continue;
+			for (File colName : this.ruleDir.listFiles()){
+				String fileNameNoExt = FilenameUtils.removeExtension(colName.
+						getName());
+				String currCol = fileNameNoExt;
+				ResultSet rs = st.executeQuery("SELECT DISTINCT( \"" + currCol
+						+ "\") FROM " + tableName);
+				while (rs.next()) {
+					String parameter = rs.getString(currCol);
+					if (parameter == null) {
+						continue;
+					}
+					OntologyClass eunisObj = new OntologyClass();
+					System.out.println(colName);
+					// System.out.println(parameter);
+					if (parameter.contains(" ")) {
+						parameter = parameter.replace(" ", "_");
+					}
+					if (eunisClasses.contains(eunisObj.getName()) == false) {
+						eunisObj.setName(parameter);
+						eunisClasses.add(eunisObj);
+						if (parameter == "0"){
+							parameter = "false";
+						} else if (parameter == "1"){
+							parameter = "true";
+						}
+						System.out.println("Added: " + parameter);
+					}
 				}
-				OntologyClass eunisObj = new OntologyClass();
-				System.out.println(this.colName);
-				// System.out.println(parameter);
-				if (parameter.contains(" ")) {
-					parameter = parameter.replace(" ", "_");
+				String entries = "";
+				for (OntologyClass c : eunisClasses) {
+					entries += c.getName() + " ";
 				}
-				if (eunisClasses.contains(eunisObj.getName()) == false) {
-					eunisObj.setName(parameter);
-					eunisClasses.add(eunisObj);
-					System.out.println("Added: " + parameter);
-				}
+				System.out.println(entries);
 			}
-			String entries = "";
-			for (OntologyClass c : eunisClasses) {
-				entries += c.getName() + " ";
-			}
-			System.out.println(entries);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		} catch (NullPointerException f) {
@@ -201,7 +206,6 @@ public class DBToOWLIndividualConverter {
 				st.close();
 			}
 		}
-
 		return eunisClasses;
 	}
 	
@@ -225,7 +229,7 @@ public class DBToOWLIndividualConverter {
 		return rowCount;
 	}
 
-	private LinkedHashSet<Individual> createIndividualsFromDB() throws SQLException { // String
+	private LinkedHashSet<Individual> createIndividualsFromDB(String limit) throws SQLException { // String
 		/* Read from DB */
 		System.out.println("getting individuals from DB!");
 		Statement st = null;
@@ -236,7 +240,7 @@ public class DBToOWLIndividualConverter {
 			st = dbConn.createStatement();
 			individuals = new LinkedHashSet<Individual>(getRowCount(this.tableName));
 			System.out.println("tableName: " + this.tableName);
-			rs = st.executeQuery("SELECT * FROM \"" + this.tableName + "\""); 
+			rs = st.executeQuery("SELECT * FROM \"" + this.tableName + "\" LIMIT " + limit);
 			rsmd = rs.getMetaData();
 			int colCount = rsmd.getColumnCount();
 			if (rsmd == null || colCount == 0 || rs == null) {

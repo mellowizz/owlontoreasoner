@@ -40,7 +40,7 @@ public class testReasoner {
 		Connection con = null;
 		Statement st = null;
 		ResultSet rs = null;
-		String url = "jdbc:postgresql://localhost:5432/RLP?user=postgres&password=BobtheBuilder";
+		String url = "jdbc:postgresql://localhost:5432/rlp_spatial?user=postgres&password=BobtheBuilder";
 	    ResultSet validClass = null;	
 		try {
 			con = DriverManager.getConnection(url);
@@ -49,13 +49,13 @@ public class testReasoner {
 			//String validationTable = tableName + "_results";
 			System.out.println("going to create tableName: " + tableName + " from validation table: "+ validationTable);
 			st.execute("drop TABLE if exists " + tableName + ";");
-			String createSql = "CREATE TABLE " +  tableName + "( ogc_fid integer, \"" + parameter + "\" VARCHAR(25), classified VARCHAR(25), PRIMARY KEY(ogc_fid));";
+			String createSql = "CREATE TABLE " +  tableName + "( id integer, \"" + parameter + "\" VARCHAR(25), classified VARCHAR(25), PRIMARY KEY(id));";
 			System.out.println(createSql);
 			st.executeUpdate(createSql);
-			validClass = st.executeQuery("select ogc_fid, \"" + parameter + "\" from " + validationTable);
+			validClass = st.executeQuery("select id, \"" + parameter + "\" from " + validationTable);
 			HashMap<Integer, String> validClasses = new HashMap <Integer, String>();
 			while (validClass.next()){
-				validClasses.put(validClass.getInt("ogc_fid"), validClass.getString(parameter));
+				validClasses.put(validClass.getInt("id"), validClass.getString(parameter));
 			}
 			 for (Entry<Integer, List<String>> ee : myDict.entrySet()) {
 				Integer key = ee.getKey();
@@ -63,7 +63,7 @@ public class testReasoner {
 				System.out.println();
 				System.out.println(key + ":");
 				String new_value = Joiner.on("_").skipNulls().join(values);
-				String query = "insert into " + tableName + "(ogc_fid, \"" + parameter + "\", classified) values(" + key +
+				String query = "insert into " + tableName + "(id, \"" + parameter + "\", classified) values(" + key +
 						",'" + validClasses.get(key) +"','" + new_value + "');";
 				
 				System.out.println(query);
@@ -91,20 +91,18 @@ public class testReasoner {
 		}
 	}
 
-	public static String classifyOWL(File fileName, String tableName, String resultsTbl) throws SQLException{
-		return classifyOWL(fileName, tableName, resultsTbl, "NATFLO_wetness");
-	}
-
-	public static String classifyOWL(File fileName, String tableName, String resultsTbl, String parameter) throws SQLException{
-		OWLOntologyManager mgr = OWLManager.createOWLOntologyManager();
-		OWLOntology onto = null;
-		if (mgr == null || fileName == null) {
+	public String classifyOWL() throws SQLException{
+		//OWLOntologyManager mgr = OWLManager.createOWLOntologyManager();
+		mgr = this.manager;
+		//OWLOntology onto = null;
+		if (mgr == null) {
 			System.out.println("ERROR!!");
 		}
 		
 
 		System.out.println("Before try");
 		try {
+			System.out.println("reasoner about to load ontology");
 			onto = mgr.loadOntologyFromOntologyDocument(fileName);
 			OWLReasoner factplusplus = new FaCTPlusPlusReasonerFactory()
 					.createReasoner(onto); 

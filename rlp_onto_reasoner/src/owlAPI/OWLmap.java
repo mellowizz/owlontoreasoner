@@ -2,6 +2,7 @@ package owlAPI;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -13,16 +14,26 @@ public class OWLmap {
 
 	public static class owlRuleSet {
 		String clsName;
+		List<String> parents;
+		String description;
+		String descriptionDE;
 		int ruleNumCounter;
 		int ruleNumInSet = 0;
 		HashSet<OWLClassExpression> rules = new HashSet<OWLClassExpression>();
 
 		/* constructor */
-		public owlRuleSet(String clsName, int ruleNumInSet) {
+		public owlRuleSet(String clsName, List<String> parents,
+				String description, String descriptionDE) {
 			/* starts at 0 */
 			this.clsName = clsName;
-			this.ruleNumCounter = OWLmap.ruleNum;
-			this.ruleNumInSet = ruleNumInSet;
+			this.parents = parents;
+			this.description = description;
+			this.description = descriptionDE;
+			OWLmap.ruleNum++;
+		}
+		public owlRuleSet(String clsName) {
+			/* starts at 0 */
+			this.clsName = clsName;
 			OWLmap.ruleNum++;
 		}
 
@@ -48,9 +59,9 @@ public class OWLmap {
 			return this.clsName;
 		}
 
-		public int getRuleNum() {
-			return this.ruleNumCounter;
-		}
+		//public int getRuleNum() {
+	    //		return this.ruleNumCounter;
+		//}
 
 	}
 
