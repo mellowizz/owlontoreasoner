@@ -39,14 +39,6 @@ public class OntologyWriter {
 	 * Writes properties and classes to ontology
 	 */
 
-	/*
-	 * OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
-	 * OWLOntology ontology; OWLDataFactory factory; // =
-	 * manager.getOWLDataFactory(); public OntologyWriter(IRI documentIRI)
-	 * throws OWLOntologyCreationException{
-	 * manager.loadOntologyFromOntologyDocument(documentIRI); factory =
-	 * manager.getOWLDataFactory(); }
-	 */
 	public void writeAll(LinkedHashSet<Individual> individuals, OWLmap rules, 
 			String colName, IRI documentIRI,
 			IRI ontologyIRI) throws OWLOntologyCreationException,
@@ -56,7 +48,7 @@ public class OntologyWriter {
 				.loadOntologyFromOntologyDocument(documentIRI);
 		OWLDataFactory factory = manager.getOWLDataFactory();
 		SimpleIRIMapper mapper = new SimpleIRIMapper(ontologyIRI, documentIRI);
-		manager.addIRIMapper(mapper);
+		//manager.addIRIMapper(mapper);
 		PrefixManager pm = new DefaultPrefixManager(ontologyIRI.toString()); 
 																			
 		OWLClass parameter = factory.getOWLClass(IRI.create(ontologyIRI
@@ -120,6 +112,7 @@ public class OntologyWriter {
 			Map.Entry pair = (Map.Entry) it.next();
 			String currCls = (String) pair.getKey();
 			owlCls = factory.getOWLClass(IRI.create("#" + currCls ));
+			System.out.println("CurrCls for rule: " + currCls);
 			ArrayList<owlRuleSet> currRuleset = (ArrayList<owlRuleSet>) pair.getValue();
 			for (int i=0; i< currRuleset.size(); i++){
 				firstRuleSet = factory.getOWLObjectIntersectionOf(currRuleset.get(i).getRuleList(currCls));
@@ -260,7 +253,7 @@ public class OntologyWriter {
 	}
 
 	public void writeIndividuals(LinkedHashSet<Individual> individuals,
-			IRI documentIRI) throws OWLOntologyCreationException,
+			IRI ontologyIRI, IRI documentIRI) throws OWLOntologyCreationException,
 			OWLOntologyStorageException {
 		/*
 		 * Writes Individuals (and corresponding DataProperties) to an existing
@@ -271,13 +264,12 @@ public class OntologyWriter {
 		OWLOntology ontology = manager
 				.loadOntologyFromOntologyDocument(documentIRI);
 		OWLDataFactory factory = manager.getOWLDataFactory();
-		IRI ontologyIRI = ontology.getOntologyID().getOntologyIRI();
+		//IRI ontologyIRI = ontology.getOntologyID().getOntologyIRI();
 		SimpleIRIMapper mapper = new SimpleIRIMapper(ontologyIRI, documentIRI);
 
 		manager.addIRIMapper(mapper);
 
 		PrefixManager pm = new DefaultPrefixManager(ontologyIRI.toString()); // +
-																				// '#'
 		// OWLClass eunis = factory.getOWLClass(":")
 		// manager.addAxiom(ontology, eunis);
 

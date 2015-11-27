@@ -163,7 +163,7 @@ public class CSVToOWLRulesConverter {
 				}
 				/*done with CSV, add rules */
                 if (owlRulesMap.get(classNames[0]) == null){
-                    OWLmap.owlRuleSet rule = new OWLmap.owlRuleSet (classNames[0], ruleCounter);
+                    OWLmap.owlRuleSet rule = new OWLmap.owlRuleSet (classNames[0]);
                     //OWLmap.owlRuleSet rule_target = new OWLmap.owlRuleSet (classNames[1], ruleCounter);
                     rule.addAll(ruleSet);
                     //rule_target.addAll(ruleSetOpp);
@@ -176,7 +176,7 @@ public class CSVToOWLRulesConverter {
                 	ArrayList<owlRuleSet> existingRules = owlRulesMap.pop(classNames[0]);
                 	owlRuleSet the_rules = existingRules.remove(0);
                 	ruleSet.addAll(the_rules.getRuleList(classNames[0]));
-                    OWLmap.owlRuleSet rule = new OWLmap.owlRuleSet (classNames[0], ruleCounter);
+                    OWLmap.owlRuleSet rule = new OWLmap.owlRuleSet (classNames[0]);
                     ArrayList <owlRuleSet> newRules = new ArrayList<owlRuleSet>();
                     rule.addAll(ruleSet);
                     newRules.add(rule);

@@ -30,8 +30,6 @@ public class Main {
 	}
 	public static void main(String[] args) throws SQLException, IOException, OWLOntologyCreationException{
 		RLPUtils.getOsName();
-		//String parameter = "natflo_wetness";
-		// table to classify on
 		String tableName = "test";
         File rulesDir = new File("c:/Users/Moran/test-rlp/sci-kit_rules/");
         ArrayList<String> rulesList = getRulesList(rulesDir);

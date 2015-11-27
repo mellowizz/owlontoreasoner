@@ -14,26 +14,16 @@ public class OWLmap {
 
 	public static class owlRuleSet {
 		String clsName;
-		List<String> parents;
-		String description;
-		String descriptionDE;
 		int ruleNumCounter;
 		int ruleNumInSet = 0;
 		HashSet<OWLClassExpression> rules = new HashSet<OWLClassExpression>();
 
 		/* constructor */
-		public owlRuleSet(String clsName, List<String> parents,
-				String description, String descriptionDE) {
-			/* starts at 0 */
-			this.clsName = clsName;
-			this.parents = parents;
-			this.description = description;
-			this.description = descriptionDE;
-			OWLmap.ruleNum++;
-		}
 		public owlRuleSet(String clsName) {
 			/* starts at 0 */
 			this.clsName = clsName;
+			this.ruleNumCounter = OWLmap.ruleNum;
+			this.ruleNumInSet = ruleNumInSet;
 			OWLmap.ruleNum++;
 		}
 

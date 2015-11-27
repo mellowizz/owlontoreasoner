@@ -7,6 +7,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.swing.filechooser.FileNameExtensionFilter;
+
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLClassExpression;
@@ -35,7 +37,6 @@ public class CSVToOWLRules {
 		this.numRules = numberOfRules;
 	}
 
-			
 	public OWLmap CSVRules(File csvFile) 
 			throws OWLOntologyCreationException, NumberFormatException,
 			IOException, OWLOntologyStorageException {

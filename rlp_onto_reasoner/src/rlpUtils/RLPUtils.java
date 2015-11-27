@@ -3,6 +3,7 @@ package rlpUtils;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -29,31 +30,33 @@ public class RLPUtils {
 	   }
 
 	public static ArrayList<String> getDistinctValuesFromTbl(String tableName, String colName) throws SQLException{
-		ArrayList<String> columnValues = new ArrayList<String>();
+		ArrayList<String> columnValues = null; 
 		String url = "jdbc:postgresql://localhost:5432/rlp_spatial?user=postgres&password=BobtheBuilder";
 		Statement st = null;
 		Connection db = null;
+		ResultSetMetaData rsmd = null;
 		try {
 			db = DriverManager.getConnection(url);
 			st = db.createStatement();
-			String myQuery = String.format("SELECT DISTINCT( \"%s\") as param "
-							 			 + "FROM \"%s\" "
-							 			 + "WHERE\"%s\" != ''",
-							 			 colName, tableName, colName); 
-			System.out.println(myQuery);
+			String myQuery = "SELECT DISTINCT( " + colName + ")"
+							 			 + " FROM " + tableName
+							 			 + " WHERE " + colName + " != '' AND "
+							 			 + colName + " IS NOT NULL";
+			//System.out.println(myQuery);
 			ResultSet rs = st.executeQuery(myQuery);
+			rsmd = rs.getMetaData();
+			int colCount = rsmd.getColumnCount();
+			columnValues = new ArrayList<String>(colCount);
 			while (rs.next()) {
-				String quotedColName = "\""+colName + "\"";
-				String parameter = rs.getString("param"); //quotedColName);
-				if (parameter == null){ 
-					System.out.println("parameter == NULL!");
-					continue;
-				}
+				String parameter = rs.getString(colName); //quotedColName);
 				System.out.println(parameter);
-				if (parameter.contains("/")){
-					parameter = parameter.split("/")[1];
-				} else if (parameter.contains(" ")){
+				if (parameter.contains(" ")){
 					parameter = parameter.replace(" ", "_");
+				}
+				if (parameter.startsWith("0")){
+					parameter = "false";
+				} else if (parameter.startsWith("1")){
+					parameter = "true";
 				}
 				columnValues.add(parameter);
 			}
@@ -64,6 +67,11 @@ public class RLPUtils {
 		} finally {
 			if (st != null) {
 				st.close();
+				st = null;
+			}
+			if (db !=null){
+				db.close();
+				db = null;
 			}
 		}
 		return columnValues;
