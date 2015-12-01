@@ -36,16 +36,16 @@ public class Main {
         System.out.println("Rules: " + rulesList.toString());
 		int numRules = 8;
 		String algorithm = "dt";
-		File outFile = new File("C:/Users/Moran/test-rlp/grassland_no.owl");
+		File outFile = new File("C:/Users/Moran/test-rlp/grassland_base.owl");
 		//AddIndividuals 
-		String csvClasses = "C:/Users/Moran/git/owlontoreasoner/rlp_onto_reasoner/src/data/rlp_eunis_key.csv";
+		String csvClasses = "C:/Users/Moran/git/owlontoreasoner/rlp_onto_reasoner/data/rlp_eunis_key.csv";
 		OntologyCreator ontCreate = new OntologyCreator(
 		"jdbc:postgresql://localhost:5432/rlp_spatial?user=postgres&password=BobtheBuilder",
 		tableName, rulesDir, numRules, algorithm, rulesList,
 		outFile, csvClasses);
 		String ontologyIRI = "http://www.user.tu-berlin.de/niklasmoran/" + outFile.getName().trim();
 		try {
-			//ontCreate.createOntology(ontologyIRI, "version_1_0", outFile);
+			ontCreate.createOntology(ontologyIRI, "version_1_0", outFile);
 			ontCreate.loadOntology(ontologyIRI, "version_1_0", outFile);
 		 } catch (OWLOntologyCreationException e) {
 			 e.printStackTrace();
@@ -80,6 +80,7 @@ public class Main {
 				
 				Process process = new ProcessBuilder(pythonLoc,
 							currLocation + "/sql_utils/confusion_matrix.py", returnTbl).start();
-		}*/
+		}
+		*/
 	}
 }

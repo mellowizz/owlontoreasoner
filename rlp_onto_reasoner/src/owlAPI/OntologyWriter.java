@@ -264,8 +264,7 @@ public class OntologyWriter {
 		OWLOntology ontology = manager
 				.loadOntologyFromOntologyDocument(documentIRI);
 		OWLDataFactory factory = manager.getOWLDataFactory();
-		//IRI ontologyIRI = ontology.getOntologyID().getOntologyIRI();
-		SimpleIRIMapper mapper = new SimpleIRIMapper(ontologyIRI, documentIRI);
+		SimpleIRIMapper mapper = new SimpleIRIMapper(this.ontologyIRI, this.documentIRI);
 
 		manager.addIRIMapper(mapper);
 
