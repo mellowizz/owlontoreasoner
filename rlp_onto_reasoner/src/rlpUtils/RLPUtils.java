@@ -53,11 +53,13 @@ public class RLPUtils {
 				if (parameter.contains(" ")){
 					parameter = parameter.replace(" ", "_");
 				}
+				/*
 				if (parameter.startsWith("0")){
 					parameter = "false";
 				} else if (parameter.startsWith("1")){
 					parameter = "true";
 				}
+				*/
 				columnValues.add(parameter);
 			}
 		} catch (SQLException e) {

@@ -524,14 +524,14 @@ public class OntologyCreator {
                     if (parameter.contains(" ")) {
                         parameter = parameter.replace(" ", "_");
                     }
+                    if (parameter.startsWith("0")) {
+                        parameter = fileNameNoExt + "_false";
+                    } else if (parameter.startsWith("1")) {
+                        parameter = fileNameNoExt + "_true";
+                    }
                     if (eunisClasses.contains(eunisObj.getName()) == false) {
                         eunisObj.setName(parameter);
                         eunisClasses.add(eunisObj);
-                        if (parameter.startsWith("0")) {
-                            parameter = "false";
-                        } else if (parameter.startsWith("1")) {
-                            parameter = "true";
-                        }
                         System.out.println("Added: " + parameter);
                     }
                 }
@@ -1006,21 +1006,9 @@ public class OntologyCreator {
                     /* add collected rules to class and clear rulesList */
                     try {
                         if (parameter.matches("0")) {
-                            literal = factory.getOWLLiteral("false",
-                                    booleanDataType);
-                            OWLDataOneOf boolFalse = factory
-                                    .getOWLDataOneOf(literal);
-                            myRestriction = factory.getOWLDataSomeValuesFrom(
-                                    hasObjProp, boolFalse);
-                            ruleSet.add(myRestriction);
+                            parameter = fileNameNoExt + "_false";
                         } else if (parameter.matches("1")) {
-                            literal = factory.getOWLLiteral("true",
-                                    booleanDataType);
-                            OWLDataOneOf boolFalse = factory
-                                    .getOWLDataOneOf(literal);
-                            myRestriction = factory.getOWLDataSomeValuesFrom(
-                                    hasObjProp, boolFalse);
-                            ruleSet.add(myRestriction);
+                            parameter = fileNameNoExt + "_true";
                         }
                         OWLmap.owlRuleSet rule = new OWLmap.owlRuleSet(
                                 parameter); // ,
