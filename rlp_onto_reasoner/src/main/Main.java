@@ -36,7 +36,7 @@ public class Main {
         System.out.println("Rules: " + rulesList.toString());
 		int numRules = 8;
 		String algorithm = "dt";
-		File outFile = new File("C:/Users/Moran/test-rlp/grassland_delta.owl");
+		File outFile = new File("C:/Users/Moran/test-rlp/grassland_very_small.owl");
 		//AddIndividuals 
 		String csvClasses = "C:/Users/Moran/git/owlontoreasoner/rlp_onto_reasoner/data/rlp_eunis_key.csv";
 		OntologyCreator ontCreate = new OntologyCreator(

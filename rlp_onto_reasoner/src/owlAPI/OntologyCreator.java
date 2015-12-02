@@ -45,6 +45,7 @@ import org.semanticweb.owlapi.model.OWLDatatypeRestriction;
 import org.semanticweb.owlapi.model.OWLLiteral;
 import org.semanticweb.owlapi.model.OWLNamedIndividual;
 import org.semanticweb.owlapi.model.OWLObjectProperty;
+import org.semanticweb.owlapi.model.OWLObjectPropertyAssertionAxiom;
 import org.semanticweb.owlapi.model.OWLObjectUnionOf;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
@@ -210,7 +211,7 @@ public class OntologyCreator {
         manager.saveOntology(ontology);
     }
 
-    public void writeAll(//LinkedHashSet<OntologyClass> classes,
+    public void writeAll(LinkedHashSet<OntologyClass> classes,
             LinkedHashSet<Individual> individuals, OWLmap rules)
                     throws OWLOntologyCreationException,
                     OWLOntologyStorageException, SQLException {
@@ -221,27 +222,6 @@ public class OntologyCreator {
         manager.addIRIMapper(mapper);
         PrefixManager pm = new DefaultPrefixManager(ontologyIRI.toString());
         System.out.println("# of individuals: " + individuals.size());
-        /*
-        for (String colName : this.rulesList) {
-            System.out.println("colName: " + colName);
-            OWLClass parameter = factory
-                    .getOWLClass(IRI.create("#" + colName));
-            ArrayList<String> classes = RLPUtils.getDistinctValuesFromTbl(this.tableName,
-                    colName);
-            for (String EUClass : classes) {
-                OWLClass cls = factory.getOWLClass(
-                        IRI.create("#" + EUClass));
-                OWLClass thing = factory.getOWLThing();
-                OWLAxiom classAx = factory.getOWLSubClassOfAxiom(cls,
-                        parameter);
-                OWLAxiom parameterAx = factory.getOWLSubClassOfAxiom(parameter,
-                        thing);
-                this.manager.applyChange(new AddAxiom(this.ontology, classAx));
-                this.manager
-                .applyChange(new AddAxiom(this.ontology, parameterAx));
-            }
-        }
-        */
         for (Individual ind : individuals) {
             Integer index = 0;
 
@@ -257,29 +237,6 @@ public class OntologyCreator {
 
                 OWLLiteral literal = factory.getOWLLiteral(
                         entry.getValue().toString(), doubleDatatype);
-
-                OWLDataPropertyAssertionAxiom dataPropertyAssertion = factory
-                        .getOWLDataPropertyAssertionAxiom(dataProp, obj,
-                                literal);
-                manager.applyChange(
-                        new AddAxiom(ontology, dataPropertyAssertion));
-                index = index + 1;
-            }
-            index = 0;
-            for (Entry<String, String> entry : ind.getStringValues()
-                    .entrySet()) {
-                OWLDataProperty dataProp = factory
-                        .getOWLDataProperty("#" + entry.getKey(), pm);
-
-                OWLDatatype stringDatatype = factory
-                        .getOWLDatatype(OWL2Datatype.XSD_STRING.getIRI());
-                // System.out.println("about to write: " + value);
-                String value = entry.getValue();
-                if (value == null) {
-                    value = "";
-                }
-                OWLLiteral literal = factory.getOWLLiteral(value,
-                        stringDatatype);
 
                 OWLDataPropertyAssertionAxiom dataPropertyAssertion = factory
                         .getOWLDataPropertyAssertionAxiom(dataProp, obj,
@@ -316,7 +273,7 @@ public class OntologyCreator {
         manager.saveOntology(ontology);
     }
 
-    public void writeAll(LinkedHashSet<OntologyClass> classes,
+    public void writeAll(//LinkedHashSet<OntologyClass> classes,
             LinkedHashSet<Individual> individuals, OWLmap rulesMap)
                     throws OWLOntologyCreationException,
                     OWLOntologyStorageException, SQLException {
@@ -329,22 +286,6 @@ public class OntologyCreator {
         System.out.println("# of individuals: " + individuals.size());
         for (String colName : this.rulesList) {
             System.out.println("colName: " + colName);
-            OWLClass parameter = factory
-                    .getOWLClass(IRI.create("#" + colName));
-            ArrayList<String> classList = RLPUtils.getDistinctValuesFromTbl(this.tableName,
-                    colName);
-            for (String EUClass : classList) {
-                OWLClass cls = factory.getOWLClass(
-                        IRI.create("#" + EUClass));
-                OWLClass thing = factory.getOWLThing();
-                OWLAxiom classAx = factory.getOWLSubClassOfAxiom(cls,
-                        parameter);
-                OWLAxiom parameterAx = factory.getOWLSubClassOfAxiom(parameter,
-                        thing);
-                this.manager.applyChange(new AddAxiom(this.ontology, classAx));
-                this.manager
-                .applyChange(new AddAxiom(this.ontology, parameterAx));
-            }
         }
         for (Individual ind : individuals) {
             Integer index = 0;
@@ -370,29 +311,27 @@ public class OntologyCreator {
                 index = index + 1;
             }
             index = 0;
+            /* String is not a dataProperty 
+            OWLObjectProperty hasParameter = null;
             for (Entry<String, String> entry : ind.getStringValues()
                     .entrySet()) {
-                OWLDataProperty dataProp = factory
-                        .getOWLDataProperty("#" + entry.getKey(), pm);
-
-                OWLDatatype stringDatatype = factory
-                        .getOWLDatatype(OWL2Datatype.XSD_STRING.getIRI());
-                // System.out.println("about to write: " + value);
+                OWLClass owlCls = factory
+                        .getOWLClass("#" + entry.getKey(), pm);
+                hasParameter = factory.getOWLObjectProperty(
+                        IRI.create("#" + "has_" + entry.getKey()));
+                OWLClassExpression myRestriction = factory
+                        .getOWLObjectSomeValuesFrom(hasParameter, owlCls);
+                System.out.println("class: " + entry.getKey() + "value: has_");
+                OWLObjectPropertyAssertionAxiom 
                 String value = entry.getValue();
                 if (value == null) {
                     value = "";
                 }
-                OWLLiteral literal = factory.getOWLLiteral(value,
-                        stringDatatype);
-
-                OWLDataPropertyAssertionAxiom dataPropertyAssertion = factory
-                        .getOWLDataPropertyAssertionAxiom(dataProp, obj,
-                                literal);
                 manager.applyChange(
-                        new AddAxiom(ontology, dataPropertyAssertion));
+                        new AddAxiom(ontology, myRestriction));
                 index = index + 1;
-            }
-        }
+            } */
+        } 
         /* write rules */
         OWLClassExpression firstRuleSet = null;
         OWLClass owlCls = null;
@@ -589,23 +528,10 @@ public class OntologyCreator {
         }
         //CSVReader reader = null;
         try {
-            // LinkedHashMap<String, Integer> nameIndex = null;
-            /* open file */
-            //File csvClasses = new File(this.classesFile);
-            //reader = new CSVReader(new FileReader(csvClasses));
-            //LinkedHashMap<String, Integer> nameIndex = getColIndexes(this.classesFile);
-            /* create ontology */
-            //createOntologyObject(nameIndex, this.classesFile);
-            classes = createClassesfromDB();
-            individuals = createIndividualsFromDB("1000"); // tableName);
-            // System.out.println("# of classes: " + classes.size() + " # of
-            // individuals : " + individuals.size());
-            // OntologyWriter ontWrite = new OntologyWriter(); //
-            // IRI.create(owlFile.toURI()));
-            // File owlFiles = new File(this.ruleDir);
+            individuals = createIndividualsFromDB("10"); // tableName);
             OWLmap rulesMap = CSVRules();
 
-            writeAll(classes, individuals, rulesMap);
+            writeAll(individuals, rulesMap);
             rulesMap = null;
         } catch (NullPointerException mye) {
             throw new NullPointerException(mye.getMessage());
@@ -1004,12 +930,27 @@ public class OntologyCreator {
                 }
                 if (classList.contains(parameter)) {
                     /* add collected rules to class and clear rulesList */
+                    
                     try {
                         if (parameter.matches("0")) {
                             parameter = fileNameNoExt + "_false";
                         } else if (parameter.matches("1")) {
                             parameter = fileNameNoExt + "_true";
                         }
+                        OWLClass paramValue = factory
+                            .getOWLClass(IRI.create("#" + fileNameNoExt));
+                        OWLClass cls = factory.getOWLClass(
+                                IRI.create("#" + parameter));
+                        OWLClass thing = factory.getOWLThing();
+                        OWLAxiom classAx = factory.getOWLSubClassOfAxiom(cls,
+                                paramValue);
+                        OWLAxiom parameterAx = factory.getOWLSubClassOfAxiom(paramValue,
+                                thing);
+                        this.manager.applyChange(new AddAxiom(this.ontology, classAx));
+                        this.manager
+                        .applyChange(new AddAxiom(this.ontology, parameterAx));
+                        System.out.println("parameter: " + fileNameNoExt+
+                                " value: " + parameter);
                         OWLmap.owlRuleSet rule = new OWLmap.owlRuleSet(
                                 parameter); // ,
                         // ruleCounter);
