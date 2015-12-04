@@ -31,14 +31,15 @@ public class Main {
 	public static void main(String[] args) throws SQLException, IOException, OWLOntologyCreationException{
 		RLPUtils.getOsName();
 		String tableName = "test";
-        File rulesDir = new File("c:/Users/Moran/test-rlp/sci-kit_rules/");
+		String homeDir = System.getProperty("user.home");
+        File rulesDir = new File(homeDir +"/test-rlp/sci-kit_rules/");
         ArrayList<String> rulesList = getRulesList(rulesDir);
         System.out.println("Rules: " + rulesList.toString());
 		int numRules = 8;
 		String algorithm = "dt";
-		File outFile = new File("C:/Users/Moran/test-rlp/grassland_very_small.owl");
+		File outFile = new File(homeDir+"/test-rlp/grassland_very_small.owl");
 		//AddIndividuals 
-		String csvClasses = "C:/Users/Moran/git/owlontoreasoner/rlp_onto_reasoner/data/rlp_eunis_key.csv";
+		String csvClasses = homeDir+"/git/owlontoreasoner/rlp_onto_reasoner/data/rlp_eunis_key.csv";
 		OntologyCreator ontCreate = new OntologyCreator(
 		"jdbc:postgresql://localhost:5432/rlp_spatial?user=postgres&password=BobtheBuilder",
 		tableName, rulesDir, numRules, algorithm, rulesList,
@@ -57,7 +58,6 @@ public class Main {
 		//resultsTbl = resultsTbl.substring(0, resultsTbl.lastIndexOf("."));
 		//resultsTbl = resultsTbl + "_results";
 		System.out.println("successfully created");
-		/*
 		for (String parameter : rulesList){
 			String returnTbl = ontCreate.classifyOWL(); //outFile, tableName, resultsTbl, parameter);
 			System.out.println("results located in: " + returnTbl);
