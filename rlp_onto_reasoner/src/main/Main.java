@@ -37,7 +37,7 @@ public class Main {
         System.out.println("Rules: " + rulesList.toString());
 		int numRules = 8;
 		String algorithm = "dt";
-		File outFile = new File(homeDir+"/test-rlp/grassland_very_small.owl");
+		File outFile = new File(homeDir+"/test-rlp/grassland_smallest.owl");
 		//AddIndividuals 
 		String csvClasses = homeDir+"/git/owlontoreasoner/rlp_onto_reasoner/data/rlp_eunis_key.csv";
 		OntologyCreator ontCreate = new OntologyCreator(
@@ -57,9 +57,10 @@ public class Main {
 		//String resultsTbl = outFile.getName();
 		//resultsTbl = resultsTbl.substring(0, resultsTbl.lastIndexOf("."));
 		//resultsTbl = resultsTbl + "_results";
+		//String returnTbl = ontCreate.classifyOWL(outFile); //outFile, tableName, resultsTbl, parameter);
 		System.out.println("successfully created");
+		/*
 		for (String parameter : rulesList){
-			String returnTbl = ontCreate.classifyOWL(); //outFile, tableName, resultsTbl, parameter);
 			System.out.println("results located in: " + returnTbl);
 			File file = new File(".");
 			String currLocation = file.getCanonicalPath();
@@ -76,11 +77,11 @@ public class Main {
 					workingDirectory = System.getProperty("user.home");
 					pythonLoc = "python2";
 				}
-				System.out.println("Executing: " + currLocation);
+				System.out.println("Executing: " + 
+				currLocation + "/sql_utils/confusion_matrix.py");
 				
 				Process process = new ProcessBuilder(pythonLoc,
-							currLocation + "/sql_utils/confusion_matrix.py", returnTbl).start();
-		}
-		*/
+							currLocation + "/sql_utils/confusion_matrix.py ", returnTbl).start();
+		}*/
 	}
 }

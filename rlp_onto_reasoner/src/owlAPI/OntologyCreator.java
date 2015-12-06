@@ -1,8 +1,10 @@
 package owlAPI;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -92,6 +94,7 @@ public class OntologyCreator {
     private int numRules;
     private String classesFile;
     private SetOntologyID setOntologyID;
+    private HashSet<String> parameterClasses = new HashSet<String>();
 
     public OntologyCreator(String url, String tableName, File ruleDir,
             int numRules, String algorithm, ArrayList<String> rulesList,
@@ -284,9 +287,9 @@ public class OntologyCreator {
         manager.addIRIMapper(mapper);
         PrefixManager pm = new DefaultPrefixManager(ontologyIRI.toString());
         System.out.println("# of individuals: " + individuals.size());
-        for (String colName : this.rulesList) {
-            System.out.println("colName: " + colName);
-        }
+        //for (String colName : this.rulesList) {
+        //    System.out.println("colName: " + colName);
+        //}
         for (Individual ind : individuals) {
             Integer index = 0;
 
@@ -311,26 +314,6 @@ public class OntologyCreator {
                 index = index + 1;
             }
             index = 0;
-            /* String is not a dataProperty 
-            OWLObjectProperty hasParameter = null;
-            for (Entry<String, String> entry : ind.getStringValues()
-                    .entrySet()) {
-                OWLClass owlCls = factory
-                        .getOWLClass("#" + entry.getKey(), pm);
-                hasParameter = factory.getOWLObjectProperty(
-                        IRI.create("#" + "has_" + entry.getKey()));
-                OWLClassExpression myRestriction = factory
-                        .getOWLObjectSomeValuesFrom(hasParameter, owlCls);
-                System.out.println("class: " + entry.getKey() + "value: has_");
-                OWLObjectPropertyAssertionAxiom 
-                String value = entry.getValue();
-                if (value == null) {
-                    value = "";
-                }
-                manager.applyChange(
-                        new AddAxiom(ontology, myRestriction));
-                index = index + 1;
-            } */
         } 
         /* write rules */
         OWLClassExpression firstRuleSet = null;
@@ -790,9 +773,12 @@ public class OntologyCreator {
                 String[] nextLine;
                 int lineNum = 1;
                 OWLDatatypeRestriction newRestriction = null;
+                OWLClassExpression myRestriction = null;
+                //OWLDataProperty hasParameter = null;
                 OWLDataProperty hasParameter = null;
                 // OWLDatatypeRestriction newRestrictionOpp = null;
                 Set<OWLClassExpression> ruleSet = new HashSet<OWLClassExpression>();
+                Set<OWLClassExpression> objSet = new HashSet<OWLClassExpression>();
                 // Set<OWLClassExpression> ruleSetOpp = new
                 // HashSet<OWLClassExpression>();
                 int ruleCounter = 0;
@@ -853,6 +839,12 @@ public class OntologyCreator {
                                 .getOWLDataSomeValuesFrom(hasParameter,
                                         newRestriction);
                         ruleSet.add(newWetnessRestriction);
+                        //myRestriction = factory.getOWLEquivalentClassesAxiom()
+                        //OWLClassExpression newObjRestriction = factory
+                        //.getOWLObjectSomeValuesFrom(hasParameter, )
+                       
+                        ruleSet.add(newWetnessRestriction);
+                        //objSet.add(newObjRestriction);
                         // ruleSetOpp.add(newWetnessRestrictionOpp);
                         lineNum++;
                     } catch (NullPointerException e) {
@@ -917,12 +909,13 @@ public class OntologyCreator {
             reader = new CSVReader(new FileReader(csvFile));
             String[] nextLine;
             OWLDatatypeRestriction newRestriction = null;
-            OWLDataPropertyExpression hasObjProp = null;
             OWLClassExpression myRestriction = null;
             OWLDataProperty hasParameter = null;
+            OWLObjectProperty hasObjProp = null;
             OWLLiteral literal = null;
             
             Set<OWLClassExpression> ruleSet = new HashSet<OWLClassExpression>();
+            //Set<OWLClassExpression> objSet = new HashSet<OWLClassExpression>();
             while ((nextLine = reader.readNext()) != null) {
                 String parameter = nextLine[0]; /* why has_? */
                 if (parameter.contains(" ")) {
@@ -941,14 +934,22 @@ public class OntologyCreator {
                             .getOWLClass(IRI.create("#" + fileNameNoExt));
                         OWLClass cls = factory.getOWLClass(
                                 IRI.create("#" + parameter));
+                        hasObjProp = factory.getOWLObjectProperty(
+                                IRI.create("#" + "has_" + fileNameNoExt));
+                        OWLClassExpression expression = 
+                                factory.getOWLObjectSomeValuesFrom(hasObjProp, 
+                                        cls);
                         OWLClass thing = factory.getOWLThing();
                         OWLAxiom classAx = factory.getOWLSubClassOfAxiom(cls,
                                 paramValue);
                         OWLAxiom parameterAx = factory.getOWLSubClassOfAxiom(paramValue,
                                 thing);
+                        OWLAxiom definition = factory.getOWLEquivalentClassesAxiom(cls, expression);
+                        //this.manager.applyChange(new AddAxiom(this.ontology, definition));
                         this.manager.applyChange(new AddAxiom(this.ontology, classAx));
                         this.manager
                         .applyChange(new AddAxiom(this.ontology, parameterAx));
+                        this.parameterClasses.add(parameter);
                         System.out.println("parameter: " + fileNameNoExt+
                                 " value: " + parameter);
                         OWLmap.owlRuleSet rule = new OWLmap.owlRuleSet(
@@ -958,6 +959,8 @@ public class OntologyCreator {
                         ruleSet.clear();
                         if (owlRulesMap.get(parameter) == null) {
                             ArrayList<owlRuleSet> newRules = new ArrayList<owlRuleSet>();
+                            owlRulesMap.put(parameter, newRules);
+                            //owlRulesMap.put(fileNameNoExt, newRules);
                             newRules.add(rule);
                             owlRulesMap.put(parameter, newRules);
                             continue;
@@ -968,6 +971,9 @@ public class OntologyCreator {
                              */
                             System.out.println(
                                     "adding : " + parameter + " in rules");
+                            /* class*/
+                            //myRestriction = factory.getOWLObjectUnionOf(paramValue);
+                            // objSet.add(myRestriction);
                             owlRulesMap.get(parameter).add(rule);
                         }
                     } catch (NullPointerException e) {
@@ -1023,9 +1029,10 @@ public class OntologyCreator {
                     e.printStackTrace();
                 }
             }
-            manager.saveOntology(ontology);
+            //manager.addAxiom(this.ontology, factory.getOWLEquivalentClassesAxiom(objSet));
             reader.close();
         }
+        manager.saveOntology(ontology);
         // owlRulesMap = null;
         return owlRulesMap;
     }
@@ -1113,62 +1120,66 @@ public class OntologyCreator {
         return rowCount;
     }
 
-    public String classifyOWL()
+    public String classifyOWL(File outFile)
             throws SQLException, OWLOntologyCreationException {
-        OWLOntology onto = this.ontology;
-        if (this.manager == null) {
-            System.out.println("ERROR!!");
-        }
+        OWLOntologyManager mgr = OWLManager.createOWLOntologyManager();
+        IRI ontologyIRI = IRI.create("http://www.user.tu-berlin.de/niklasmoran/" + outFile.getName().trim());
+        OWLOntology onto = null;
         String resultsTbl = null;
         System.out.println("Before try");
+        PrintWriter pw = null;
+        String tableName = "test";
+        String homeDir = System.getProperty("user.home");
+        defaultDict<Integer, List<String>> dict = new defaultDict<Integer, List<String>>(ArrayList.class);
         try {
+            mgr.createOntology(ontologyIRI);
+            onto = mgr.loadOntologyFromOntologyDocument(IRI.create(outFile));// ontologyIRI);
+            //mgr.saveOntology(onto, new OWLXMLDocumentFormat(), IRI.create(outFile.toURI()));
+            //OWLReasoner reasoner = new FaCTPlusPlusReasonerFactory().createNonBufferingReasoner(onto);
+            assert (onto != null);
+            OWLReasoner reasoner = new FaCTPlusPlusReasonerFactory()
+                    .createReasoner(onto);
+            System.out.println("Is Consistent: " + reasoner.isConsistent());
+            pw = new PrintWriter(new File(homeDir + "/test-rlp/create.sql"));
             System.out.println("reasoner about to load ontology");
             // onto = mgr.loadOntologyFromOntologyDocument(fileName);
-            OWLReasoner factplusplus = new FaCTPlusPlusReasonerFactory()
-                    .createReasoner(onto);
-            System.out.println(factplusplus.getReasonerVersion());
+            System.out.println(reasoner.getReasonerVersion());
             HashMap<String, ArrayList<String>> classesHash = new HashMap<String, ArrayList<String>>();
             for (String parameter : this.rulesList) {
-                ArrayList<String> classList = RLPUtils
-                        .getDistinctValuesFromTbl(tableName, parameter);
+                System.out.println("current parameter: " + parameter);
                 resultsTbl = "results_" + parameter;
-                defaultDict<Integer, List<String>> dict = new defaultDict<Integer, List<String>>(
-                        ArrayList.class);
+                pw.println("COPY " + resultsTbl + " FROM stdin USING DELIMITERS '|';");
                 for (OWLClass c : onto.getClassesInSignature()) {
-                    if (classList.isEmpty()) {
-                        System.out.println("class list empty!");
-                        break;
-                    }
-                    String currClass = c.getIRI().getFragment();
-                    if (currClass.contains("/")) {
-                        currClass = currClass.split("/")[1];
-                    }
-                    System.out.println("current class: " + currClass);
-
-                    if (classList.contains(currClass)) {
-                        NodeSet<OWLNamedIndividual> instances = factplusplus
-                                .getInstances(c, false);
-                        System.out.println("current class: " + currClass
-                                + " isEmpty? " + instances.isEmpty());
-                        for (OWLNamedIndividual i : instances.getFlattened()) {
-                            dict.get(Integer.parseInt(i.getIRI().getFragment()))
-                            .add(currClass);
-                            System.out.println(i.getIRI().getFragment());
+                    if (this.parameterClasses.contains(c.getIRI().getShortForm())) {
+                        NodeSet<OWLNamedIndividual> instances = reasoner.getInstances(c, false);
+                        String owlCls = c.getIRI().getShortForm();
+                        int numIndividuals = 0;
+                        if (instances.isEmpty()){
+                            System.out.println("class: " + " is empty!!");
+                        } else{
+                            numIndividuals = instances.getFlattened().size();
                         }
-                        System.out.println(
-                                "Total: " + instances.getFlattened().size());
-                    } else {
-                        continue;
+                        System.out.println("Class : " + owlCls + " has: " + 
+                                numIndividuals + " individuals");
+                        for (OWLNamedIndividual i : instances.getFlattened()){
+                            if (owlCls.endsWith("false")) {
+                                owlCls = "0";
+                            } else if (owlCls.endsWith("true")) {
+                                owlCls = "1";
+                            }
+                            String individual = i.getIRI().getShortForm();
+                            pw.println(individual.substring(individual.lastIndexOf("#") + 1) + "|"+ owlCls);
+                            System.out.println(individual.substring(individual.lastIndexOf("#") + 1));
+                        }
                     }
-                }
-                for (ArrayList<String> clazz : classesHash.values()) {
-                    System.out.println(clazz.toString());
-                    System.out.println("Class size: " + clazz.size());
                 }
                 /* write results to DB */
                 // String originalDataTable = "rlp_eunis_all_parameters";
                 createTable(dict, resultsTbl, tableName, parameter);
             }
+        } catch (FileNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
         } finally {
             System.out.println("ALL DONE!");
         }
