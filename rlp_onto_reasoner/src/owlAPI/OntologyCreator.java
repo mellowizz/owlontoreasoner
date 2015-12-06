@@ -896,6 +896,7 @@ public class OntologyCreator {
         OWLmap owlRulesMap = new OWLmap();
         ArrayList classList = null;
         OWLDatatype booleanDataType = factory.getBooleanOWLDatatype();
+        OWLClass paramValue = null;
         for (File csvFile : this.ruleDir.listFiles()) {
             String fileNameNoExt = FilenameUtils
                     .removeExtension(csvFile.getName());
@@ -915,7 +916,7 @@ public class OntologyCreator {
             OWLLiteral literal = null;
             
             Set<OWLClassExpression> ruleSet = new HashSet<OWLClassExpression>();
-            //Set<OWLClassExpression> objSet = new HashSet<OWLClassExpression>();
+            Set<OWLClassExpression> objSet = new HashSet<OWLClassExpression>();
             while ((nextLine = reader.readNext()) != null) {
                 String parameter = nextLine[0]; /* why has_? */
                 if (parameter.contains(" ")) {
@@ -930,7 +931,7 @@ public class OntologyCreator {
                         } else if (parameter.matches("1")) {
                             parameter = fileNameNoExt + "_true";
                         }
-                        OWLClass paramValue = factory
+                        paramValue = factory
                             .getOWLClass(IRI.create("#" + fileNameNoExt));
                         OWLClass cls = factory.getOWLClass(
                                 IRI.create("#" + parameter));
@@ -972,8 +973,8 @@ public class OntologyCreator {
                             System.out.println(
                                     "adding : " + parameter + " in rules");
                             /* class*/
-                            //myRestriction = factory.getOWLObjectUnionOf(paramValue);
-                            // objSet.add(myRestriction);
+                            myRestriction = factory.getOWLObjectUnionOf(cls);
+                            objSet.add(myRestriction);
                             owlRulesMap.get(parameter).add(rule);
                         }
                     } catch (NullPointerException e) {
@@ -1029,7 +1030,8 @@ public class OntologyCreator {
                     e.printStackTrace();
                 }
             }
-            //manager.addAxiom(this.ontology, factory.getOWLEquivalentClassesAxiom(objSet));
+            OWLObjectUnionOf myUnion = factory.getOWLObjectUnionOf(objSet);
+            manager.addAxiom(this.ontology, factory.getOWLEquivalentClassesAxiom(paramValue, myUnion));
             reader.close();
         }
         manager.saveOntology(ontology);
