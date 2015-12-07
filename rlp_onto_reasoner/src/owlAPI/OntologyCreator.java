@@ -277,7 +277,7 @@ public class OntologyCreator {
     }
 
     public void writeAll(//LinkedHashSet<OntologyClass> classes,
-            LinkedHashSet<Individual> individuals, OWLmap rulesMap)
+            LinkedHashSet<Individual> individuals) //, OWLmap rulesMap)
                     throws OWLOntologyCreationException,
                     OWLOntologyStorageException, SQLException {
 
@@ -319,7 +319,7 @@ public class OntologyCreator {
         OWLClassExpression firstRuleSet = null;
         OWLClass owlCls = null;
         OWLObjectUnionOf totalunion = null;
-        Iterator it = rulesMap.map.entrySet().iterator();
+        Iterator it = this.owlRulesMap.map.entrySet().iterator();
         Set<OWLClassExpression> unionSet = new HashSet<OWLClassExpression>();
         while (it.hasNext()) {
             Map.Entry pair = (Map.Entry) it.next();
@@ -509,13 +509,16 @@ public class OntologyCreator {
         } else {
             System.out.println("Sorry, unsupported OS!");
         }
-        //CSVReader reader = null;
+        CSVReader reader = null;
+        
         try {
-            individuals = createIndividualsFromDB("10"); // tableName);
-            OWLmap rulesMap = CSVRules();
-
-            writeAll(individuals, rulesMap);
-            rulesMap = null;
+            
+            individuals = createIndividualsFromDB("100"); // tableName);
+            //this.OWLmap rulesMap = CSVRules();
+            this.owlRulesMap = CSVRules();
+            //addEUNISClasses();
+            writeAll(individuals);// rulesMap);
+            this.owlRulesMap = null;
         } catch (NullPointerException mye) {
             throw new NullPointerException(mye.getMessage());
         } catch (OWLOntologyStorageException e2) {
@@ -533,6 +536,45 @@ public class OntologyCreator {
             // individuals = null;
         }
         // return this.owlOut; //owlFile;
+    }
+    public void addEUNISClasses() throws OWLOntologyCreationException,
+            OWLOntologyStorageException {
+        CSVReader reader = null;
+        String[] nextLine = null;
+        LinkedHashMap<String, Integer> nameIndex = null;
+        try {
+            
+            reader = new CSVReader(new FileReader(this.classesFile));
+            nameIndex = getColIndexes(this.classesFile);
+            // skip header
+            nextLine = reader.readNext();
+            while ((nextLine = reader.readNext()) != null) {
+                /* "eunis" */
+                String className = nextLine[2];
+                if (className.startsWith("E")){
+                    String description = nextLine[3];
+                    String descriptionDE = nextLine[4];
+                    List<String> parents = new ArrayList<String>();
+                    parents.add("EUNIS");
+                    createOntoClass(parents, className, description, descriptionDE);
+                    owlRuleSet owlRules = buildRuleSet(nextLine, nameIndex);
+                    if (this.owlRulesMap.get(className) == null) {
+                        ArrayList<owlRuleSet> newRules = new ArrayList<owlRuleSet>();
+                        newRules.add(owlRules);
+                        this.owlRulesMap.put(className, newRules);
+                    } else {
+                        ArrayList<owlRuleSet> existingRules = this.owlRulesMap
+                                .pop(className);
+                        existingRules.add(owlRules);
+                        this.owlRulesMap.put(className, existingRules);
+                    }
+                }
+            }
+        } catch (NullPointerException f) {
+            f.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
     public void createOntologyObject(LinkedHashMap<String, Integer> nameIndex,
             String fileName) throws OWLOntologyCreationException,
@@ -930,26 +972,28 @@ public class OntologyCreator {
                             parameter = fileNameNoExt + "_false";
                         } else if (parameter.matches("1")) {
                             parameter = fileNameNoExt + "_true";
+                        } else if (parameter.contains("/")){
+                            parameter = parameter.replace("/", "_");
                         }
+                        
                         paramValue = factory
                             .getOWLClass(IRI.create("#" + fileNameNoExt));
                         OWLClass cls = factory.getOWLClass(
                                 IRI.create("#" + parameter));
                         hasObjProp = factory.getOWLObjectProperty(
                                 IRI.create("#" + "has_" + fileNameNoExt));
-                        OWLClassExpression expression = 
-                                factory.getOWLObjectSomeValuesFrom(hasObjProp, 
-                                        cls);
+                        OWLClassExpression expression =  factory.getOWLObjectSomeValuesFrom(hasObjProp, cls);
                         OWLClass thing = factory.getOWLThing();
                         OWLAxiom classAx = factory.getOWLSubClassOfAxiom(cls,
-                                paramValue);
+                                thing);
                         OWLAxiom parameterAx = factory.getOWLSubClassOfAxiom(paramValue,
                                 thing);
-                        OWLAxiom definition = factory.getOWLEquivalentClassesAxiom(cls, expression);
-                        //this.manager.applyChange(new AddAxiom(this.ontology, definition));
+                        OWLAxiom objUnionSub = factory.getOWLSubObjectPropertyOfAxiom(hasObjProp, factory.getOWLTopObjectProperty());
+                        this.manager.addAxiom(this.ontology, factory.getOWLEquivalentClassesAxiom(factory.getOWLObjectUnionOf(expression)));
                         this.manager.applyChange(new AddAxiom(this.ontology, classAx));
                         this.manager
                         .applyChange(new AddAxiom(this.ontology, parameterAx));
+                        this.manager.applyChange(new AddAxiom(this.ontology, objUnionSub));
                         this.parameterClasses.add(parameter);
                         System.out.println("parameter: " + fileNameNoExt+
                                 " value: " + parameter);
@@ -961,7 +1005,6 @@ public class OntologyCreator {
                         if (owlRulesMap.get(parameter) == null) {
                             ArrayList<owlRuleSet> newRules = new ArrayList<owlRuleSet>();
                             owlRulesMap.put(parameter, newRules);
-                            //owlRulesMap.put(fileNameNoExt, newRules);
                             newRules.add(rule);
                             owlRulesMap.put(parameter, newRules);
                             continue;

@@ -35,9 +35,9 @@ public class Main {
         File rulesDir = new File(homeDir +"/test-rlp/sci-kit_rules/");
         ArrayList<String> rulesList = getRulesList(rulesDir);
         System.out.println("Rules: " + rulesList.toString());
-		int numRules = 8;
+		int numRules = 20;
 		String algorithm = "dt";
-		File outFile = new File(homeDir+"/test-rlp/grassland_smallest.owl");
+		File outFile = new File(homeDir+"/test-rlp/grassland_dt_big.owl");
 		//AddIndividuals 
 		String csvClasses = homeDir+"/git/owlontoreasoner/rlp_onto_reasoner/data/rlp_eunis_key.csv";
 		OntologyCreator ontCreate = new OntologyCreator(
