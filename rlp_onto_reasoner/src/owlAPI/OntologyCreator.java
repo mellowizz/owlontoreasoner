@@ -1175,7 +1175,7 @@ public class OntologyCreator {
         PrintWriter pw = null;
         String tableName = "test";
         String homeDir = System.getProperty("user.home");
-        defaultDict<Integer, List<String>> dict = new defaultDict<Integer, List<String>>(ArrayList.class);
+        defaultDict<Integer, List<String>> dict = null;  new defaultDict<Integer, List<String>>(ArrayList.class);
         try {
             mgr.createOntology(ontologyIRI);
             onto = mgr.loadOntologyFromOntologyDocument(IRI.create(outFile));// ontologyIRI);
@@ -1191,39 +1191,48 @@ public class OntologyCreator {
             System.out.println(reasoner.getReasonerVersion());
             HashMap<String, ArrayList<String>> classesHash = new HashMap<String, ArrayList<String>>();
             for (String parameter : this.rulesList) {
+                dict = new defaultDict<Integer, List<String>>(ArrayList.class); 
                 System.out.println("current parameter: " + parameter);
                 resultsTbl = "results_" + parameter;
                 pw.println("COPY " + resultsTbl + " FROM stdin USING DELIMITERS '|';");
                 for (OWLClass c : onto.getClassesInSignature()) {
-                    if (this.parameterClasses.contains(c.getIRI().getShortForm())) {
+                    String currClass = c.getIRI().getShortForm();
+                    if (RLPUtils.getDistinctValuesFromTbl(this.tableName, parameter).contains(currClass)){
+                    //if ( this.parameterClasses.contains(currClass)){
                         NodeSet<OWLNamedIndividual> instances = reasoner.getInstances(c, false);
-                        String owlCls = c.getIRI().getShortForm();
                         int numIndividuals = 0;
                         if (instances.isEmpty()){
                             System.out.println("class: " + " is empty!!");
                         } else{
                             numIndividuals = instances.getFlattened().size();
                         }
-                        System.out.println("Class : " + owlCls + " has: " + 
+                        System.out.println("currcls: " + currClass + " has: " + 
                                 numIndividuals + " individuals");
                         for (OWLNamedIndividual i : instances.getFlattened()){
-                            if (owlCls.endsWith("false")) {
-                                owlCls = "0";
-                            } else if (owlCls.endsWith("true")) {
-                                owlCls = "1";
+                            if (currClass.endsWith("false")) {
+                                currClass = "0";
+                            } else if (currClass.endsWith("true")) {
+                                currClass = "1";
                             }
                             String individual = i.getIRI().getShortForm();
-                            pw.println(individual.substring(individual.lastIndexOf("#") + 1) + "|"+ owlCls);
-                            System.out.println(individual.substring(individual.lastIndexOf("#") + 1));
+                            int currId = Integer.parseInt(individual.substring(individual.lastIndexOf("#")+1));
+                            dict.get(currId).add(currClass);
+                            pw.println(currId + "|"+ currClass);
+                            System.out.println(currId + ", " + currClass);
                         }
+                    } else {
+                        continue;
                     }
-                }
                 /* write results to DB */
                 // String originalDataTable = "rlp_eunis_all_parameters";
+                }
                 createTable(dict, resultsTbl, tableName, parameter);
+                dict = null;
             }
         } catch (FileNotFoundException e) {
             // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (NumberFormatException e){
             e.printStackTrace();
         } finally {
             System.out.println("ALL DONE!");
@@ -1271,7 +1280,7 @@ public class OntologyCreator {
                         + parameter + "\", classified) values(" + key + ",'"
                         + validClasses.get(key) + "','" + new_value + "');";
 
-                // System.out.println(query);
+                System.out.println(query);
                 st.addBatch(query);
             }
             st.executeBatch();

@@ -37,7 +37,7 @@ public class Main {
         System.out.println("Rules: " + rulesList.toString());
 		int numRules = 20;
 		String algorithm = "dt";
-		File outFile = new File(homeDir+"/test-rlp/grassland_dt_big.owl");
+		File outFile = new File(homeDir+"/test-rlp/grassland_dt.owl");
 		//AddIndividuals 
 		String csvClasses = homeDir+"/git/owlontoreasoner/rlp_onto_reasoner/data/rlp_eunis_key.csv";
 		OntologyCreator ontCreate = new OntologyCreator(
@@ -57,9 +57,9 @@ public class Main {
 		//String resultsTbl = outFile.getName();
 		//resultsTbl = resultsTbl.substring(0, resultsTbl.lastIndexOf("."));
 		//resultsTbl = resultsTbl + "_results";
-		//String returnTbl = ontCreate.classifyOWL(outFile); //outFile, tableName, resultsTbl, parameter);
-		System.out.println("successfully created");
+		String returnTbl = ontCreate.classifyOWL(outFile); //outFile, tableName, resultsTbl, parameter);
 		/*
+		System.out.println("successfully created");
 		for (String parameter : rulesList){
 			System.out.println("results located in: " + returnTbl);
 			File file = new File(".");
