@@ -513,7 +513,7 @@ public class OntologyCreator {
         
         try {
             
-            individuals = createIndividualsFromDB("100"); // tableName);
+            individuals = createIndividualsFromDB("1000"); // tableName);
             //this.OWLmap rulesMap = CSVRules();
             this.owlRulesMap = CSVRules();
             //addEUNISClasses();
@@ -536,255 +536,6 @@ public class OntologyCreator {
             // individuals = null;
         }
         // return this.owlOut; //owlFile;
-    }
-    public void addEUNISClasses() throws OWLOntologyCreationException,
-            OWLOntologyStorageException {
-        CSVReader reader = null;
-        String[] nextLine = null;
-        LinkedHashMap<String, Integer> nameIndex = null;
-        try {
-            
-            reader = new CSVReader(new FileReader(this.classesFile));
-            nameIndex = getColIndexes(this.classesFile);
-            // skip header
-            nextLine = reader.readNext();
-            while ((nextLine = reader.readNext()) != null) {
-                /* "eunis" */
-                String className = nextLine[2];
-                if (className.startsWith("E")){
-                    String description = nextLine[3];
-                    String descriptionDE = nextLine[4];
-                    List<String> parents = new ArrayList<String>();
-                    parents.add("EUNIS");
-                    createOntoClass(parents, className, description, descriptionDE);
-                    owlRuleSet owlRules = buildRuleSet(nextLine, nameIndex);
-                    if (this.owlRulesMap.get(className) == null) {
-                        ArrayList<owlRuleSet> newRules = new ArrayList<owlRuleSet>();
-                        newRules.add(owlRules);
-                        this.owlRulesMap.put(className, newRules);
-                    } else {
-                        ArrayList<owlRuleSet> existingRules = this.owlRulesMap
-                                .pop(className);
-                        existingRules.add(owlRules);
-                        this.owlRulesMap.put(className, existingRules);
-                    }
-                }
-            }
-        } catch (NullPointerException f) {
-            f.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-    public void createOntologyObject(LinkedHashMap<String, Integer> nameIndex,
-            String fileName) throws OWLOntologyCreationException,
-    OWLOntologyStorageException {
-        CSVReader reader = null;
-        String[] nextLine = null;
-        try {
-            reader = new CSVReader(new FileReader(fileName));
-            // skip header
-            nextLine = reader.readNext();
-            while ((nextLine = reader.readNext()) != null) {
-                /* "eunis" */
-                String className = nextLine[2];
-                if (className.startsWith("E")){
-                    String description = nextLine[3];
-                    String descriptionDE = nextLine[4];
-                    List<String> parents = new ArrayList<String>();
-                    parents.add("EUNIS");
-                    createOntoClass(parents, className, description, descriptionDE);
-                    owlRuleSet owlRules = buildRuleSet(nextLine, nameIndex);
-                    if (this.owlRulesMap.get(className) == null) {
-                        ArrayList<owlRuleSet> newRules = new ArrayList<owlRuleSet>();
-                        newRules.add(owlRules);
-                        this.owlRulesMap.put(className, newRules);
-                    } else {
-                        ArrayList<owlRuleSet> existingRules = this.owlRulesMap
-                                .pop(className);
-                        existingRules.add(owlRules);
-                        this.owlRulesMap.put(className, existingRules);
-                    }
-                }
-            }
-        } catch (NullPointerException f) {
-            f.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        /* done with file */
-        /* write rules */
-        OWLClassExpression firstRuleSet = null;
-        OWLClass owlCls = null;
-        // owlCls.getIRI().getShortForm();
-        OWLObjectUnionOf totalunion = null;
-        Iterator it = this.owlRulesMap.map.entrySet().iterator(); // .itor(); //
-        // entrySet().iterator();
-        Set<OWLClassExpression> unionSet = new HashSet<OWLClassExpression>();
-        OWLDataFactory dataFactory = this.manager.getOWLDataFactory();
-        while (it.hasNext()) {
-            Map.Entry pair = (Map.Entry) it.next();
-            String currCls = (String) pair.getKey();
-            owlCls = dataFactory.getOWLClass(IRI.create("#" + currCls));
-            ArrayList<owlRuleSet> currRuleset = (ArrayList<owlRuleSet>) pair
-                    .getValue();
-            for (int i = 0; i < currRuleset.size(); i++) {
-                firstRuleSet = dataFactory.getOWLObjectIntersectionOf(
-                        currRuleset.get(i).getRuleList(currCls));
-                unionSet.add(firstRuleSet);
-            }
-            totalunion = dataFactory.getOWLObjectUnionOf(unionSet);
-            unionSet.clear();
-
-            manager.addAxiom(ontology, dataFactory
-                    .getOWLEquivalentClassesAxiom(owlCls, totalunion));
-        }
-        manager.saveOntology(ontology, this.documentIRI);
-        try {
-            if (reader != null) {
-                reader.close();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-    private owlRuleSet buildRuleSet(String[] nextLine,
-            LinkedHashMap<String, Integer> nameIndex) {
-        OWLDataFactory dataFactory = this.manager.getOWLDataFactory();
-        List<String> parents = new ArrayList<String>(); // "Parameter, "EUNIS";
-        String description = null;
-        String descriptionDE = null;
-        String paramName = "Parameter";
-        String paramValue = null;
-        OWLClassExpression myRestriction = null;
-        OWLClass parameterValue = null;
-        OWLObjectProperty hasParameter = null;
-        OWLDataProperty hasDataProperty = null;
-        OWLLiteral literal = null;
-        OWLDatatype booleanDataType = dataFactory.getBooleanOWLDatatype();
-        OWLDatatypeRestriction newDataRestriction = null;
-        Double myVal = -1.0;
-        String extractedValue = "";
-        parents.add("EUNIS");
-        String className = nextLine[2];
-        description = nextLine[3];
-        descriptionDE = nextLine[4];
-        /* create rules for EUNIS */
-        OWLmap.owlRuleSet owlRules = new OWLmap.owlRuleSet(className, parents,
-                description, descriptionDE);
-        /* loop over parameters and cleanup */
-        for (Map.Entry<String, Integer> headerEntry : nameIndex.entrySet()) {
-            /* paramName is the ObjectProperty */
-            paramName = headerEntry.getKey();
-            if (!this.rulesList.contains(paramName)){
-                continue;
-            }
-            paramValue = nextLine[headerEntry.getValue()];
-            if (paramValue.length() == 0 || paramValue == null
-                    || paramValue.contains("?")) {
-                continue;
-            }
-            /* TODO: refactor */
-            paramValue = paramValue.trim();
-            // paramValue = paramValue.replaceAll(" \\", "/");
-            paramValue = paramValue.replaceAll("\\s", "_");
-            if (paramValue.contains("%")) {
-                paramValue = paramValue.replace("%", "");
-            }
-            /* got number hopefully */
-            extractedValue = extractNumber(paramValue);
-            // System.out.println("extractedValue: " + extractedValue);
-            if (!extractedValue.isEmpty()) {
-                hasDataProperty = dataFactory.getOWLDataProperty(
-                        IRI.create("#" + "has_" + paramName));
-                // System.out.println("paramName: " + paramValue);
-                if (paramName.contains("_max") || paramName.contains("_min")) {
-                    /* dataType restriction */
-                    try {
-                        myVal = Double.parseDouble(extractedValue);
-                    } catch (NumberFormatException e) {
-                        e.printStackTrace();
-                    }
-                    if (paramName.contains("max")) {
-                        newDataRestriction = dataFactory
-                                .getOWLDatatypeMaxExclusiveRestriction(myVal);
-                        myRestriction = dataFactory.getOWLDataSomeValuesFrom(
-                                hasDataProperty, newDataRestriction);
-                    } else {
-                        newDataRestriction = dataFactory
-                                .getOWLDatatypeMinExclusiveRestriction(myVal);
-                        myRestriction = dataFactory.getOWLDataSomeValuesFrom(
-                                hasDataProperty, newDataRestriction);
-                    }
-                } else if (paramValue.matches("0")) {
-                    literal = dataFactory.getOWLLiteral("false",
-                            booleanDataType);
-                    OWLDataOneOf boolFalse = dataFactory
-                            .getOWLDataOneOf(literal);
-                    myRestriction = dataFactory.getOWLDataSomeValuesFrom(
-                            hasDataProperty, boolFalse);
-
-                } else if (paramValue.matches("1")) {
-                    literal = dataFactory.getOWLLiteral("true",
-                            booleanDataType);
-                    OWLDataOneOf boolFalse = dataFactory
-                            .getOWLDataOneOf(literal);
-                    myRestriction = dataFactory.getOWLDataSomeValuesFrom(
-                            hasDataProperty, boolFalse);
-                }
-            } else {
-                /* neither boolean nor starting with a digit */
-                parents.clear();
-                String[] paramList = null;
-                OWLObjectUnionOf totalunion1 = null;
-                Set<OWLClassExpression> unionSet1 = new HashSet<OWLClassExpression>();
-                hasParameter = dataFactory.getOWLObjectProperty(
-                        IRI.create("#" + "has_" + paramName));
-                if (paramValue.contains("/")) {
-                    paramList = paramValue.split("/");
-                    for (String s : paramList) {
-                        parameterValue = dataFactory
-                                .getOWLClass(IRI.create("#" + s));
-                        myRestriction = dataFactory.getOWLObjectSomeValuesFrom(
-                                hasParameter, parameterValue); // parameterValue);
-                        // owlRules.addRule(myRestriction);
-                        unionSet1.add(myRestriction);
-                        parents.add("Parameter");
-                        parents.add(paramName);
-                        // parents.add(paramValue);
-                        description = "A parameter from " + paramName;
-                        descriptionDE = "Ein Parameter von " + paramName;
-                        /* create class */
-                        createOntoClass(parents, s, description, descriptionDE);
-                        parents.clear();
-                    }
-                    totalunion1 = dataFactory.getOWLObjectUnionOf(unionSet1);
-                    owlRules.rules.add(totalunion1);
-                    // owlRules.addAll(unionSet1);
-                    myRestriction = null;
-                } else {
-                    parameterValue = dataFactory
-                            .getOWLClass(IRI.create("#" + paramValue));
-                    /* which restriction */
-                    myRestriction = dataFactory.getOWLObjectSomeValuesFrom(
-                            hasParameter, parameterValue); // parameterValue);
-                    /* before was outside */
-                    parents.add("Parameter");
-                    parents.add(paramName);
-                    parents.add(paramValue);
-                    description = "A parameter from " + paramName;
-                    descriptionDE = "Ein Parameter von " + paramName;
-                    /* create class */
-                    createOntoClass(parents, paramValue, description,
-                            descriptionDE);
-                }
-            }
-            /* create rule */
-            if (myRestriction != null) {
-                owlRules.addRule(myRestriction);
-            }
-        }
-        return owlRules;
     }
     public OWLmap CSVRulesConverter() throws OWLOntologyCreationException,
     NumberFormatException, IOException, OWLOntologyStorageException {
@@ -1197,6 +948,11 @@ public class OntologyCreator {
                 pw.println("COPY " + resultsTbl + " FROM stdin USING DELIMITERS '|';");
                 for (OWLClass c : onto.getClassesInSignature()) {
                     String currClass = c.getIRI().getShortForm();
+                    if (currClass.endsWith("false")) {
+                        currClass = "0";
+                    } else if (currClass.endsWith("true")) {
+                        currClass = "1";
+                    }
                     if (RLPUtils.getDistinctValuesFromTbl(this.tableName, parameter).contains(currClass)){
                     //if ( this.parameterClasses.contains(currClass)){
                         NodeSet<OWLNamedIndividual> instances = reasoner.getInstances(c, false);
@@ -1209,11 +965,6 @@ public class OntologyCreator {
                         System.out.println("currcls: " + currClass + " has: " + 
                                 numIndividuals + " individuals");
                         for (OWLNamedIndividual i : instances.getFlattened()){
-                            if (currClass.endsWith("false")) {
-                                currClass = "0";
-                            } else if (currClass.endsWith("true")) {
-                                currClass = "1";
-                            }
                             String individual = i.getIRI().getShortForm();
                             int currId = Integer.parseInt(individual.substring(individual.lastIndexOf("#")+1));
                             dict.get(currId).add(currClass);
@@ -1236,6 +987,7 @@ public class OntologyCreator {
             e.printStackTrace();
         } finally {
             System.out.println("ALL DONE!");
+            pw.close();
         }
         return resultsTbl;
     }

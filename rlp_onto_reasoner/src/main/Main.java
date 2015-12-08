@@ -54,9 +54,6 @@ public class Main {
 			e.printStackTrace();
 		 }
 		ontCreate.convertDB(); 
-		//String resultsTbl = outFile.getName();
-		//resultsTbl = resultsTbl.substring(0, resultsTbl.lastIndexOf("."));
-		//resultsTbl = resultsTbl + "_results";
 		String returnTbl = ontCreate.classifyOWL(outFile); //outFile, tableName, resultsTbl, parameter);
 		/*
 		System.out.println("successfully created");
