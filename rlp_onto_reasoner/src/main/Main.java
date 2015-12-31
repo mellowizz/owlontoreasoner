@@ -30,7 +30,7 @@ public class Main {
 	}
 	public static void main(String[] args) throws SQLException, IOException, OWLOntologyCreationException{
 		RLPUtils.getOsName();
-		String tableName = "test";
+		String tableName = "grasslands_test";
 		String homeDir = System.getProperty("user.home");
         File rulesDir = new File(homeDir +"/test-rlp/sci-kit_rules/");
         ArrayList<String> rulesList = getRulesList(rulesDir);
@@ -54,31 +54,6 @@ public class Main {
 			e.printStackTrace();
 		 }
 		ontCreate.convertDB(); 
-		String returnTbl = ontCreate.classifyOWL(outFile); //outFile, tableName, resultsTbl, parameter);
-		/*
-		System.out.println("successfully created");
-		for (String parameter : rulesList){
-			System.out.println("results located in: " + returnTbl);
-			File file = new File(".");
-			String currLocation = file.getCanonicalPath();
-			String workingDirectory = null;
-			String OS = (System.getProperty("os.name")).toUpperCase();
-			//to determine what the workingDirectory is.
-			//if it is some version of Windows
-			String pythonLoc = null;
-			if (OS.contains("WIN")){
-				workingDirectory = System.getenv("AppData");
-				pythonLoc = "C:/Python27_64/WinPython-64bit-2.7.9.3/python-2.7.9.amd64/python.exe";
-			} //Otherwise, we assume Linux or Mac
-			else {
-					workingDirectory = System.getProperty("user.home");
-					pythonLoc = "python2";
-				}
-				System.out.println("Executing: " + 
-				currLocation + "/sql_utils/confusion_matrix.py");
-				
-				Process process = new ProcessBuilder(pythonLoc,
-							currLocation + "/sql_utils/confusion_matrix.py ", returnTbl).start();
-		}*/
+		// String returnTbl = ontCreate.classifyOWL(outFile); //outFile, tableName, resultsTbl, parameter);
 	}
 }

@@ -38,16 +38,16 @@ import org.semanticweb.owlapi.model.OWLAxiom;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.model.OWLDataFactory;
-import org.semanticweb.owlapi.model.OWLDataOneOf;
+//import org.semanticweb.owlapi.model.OWLDataOneOf;
 import org.semanticweb.owlapi.model.OWLDataProperty;
 import org.semanticweb.owlapi.model.OWLDataPropertyAssertionAxiom;
-import org.semanticweb.owlapi.model.OWLDataPropertyExpression;
+//import org.semanticweb.owlapi.model.OWLDataPropertyExpression;
 import org.semanticweb.owlapi.model.OWLDatatype;
 import org.semanticweb.owlapi.model.OWLDatatypeRestriction;
 import org.semanticweb.owlapi.model.OWLLiteral;
 import org.semanticweb.owlapi.model.OWLNamedIndividual;
 import org.semanticweb.owlapi.model.OWLObjectProperty;
-import org.semanticweb.owlapi.model.OWLObjectPropertyAssertionAxiom;
+//import org.semanticweb.owlapi.model.OWLObjectPropertyAssertionAxiom;
 import org.semanticweb.owlapi.model.OWLObjectUnionOf;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
@@ -187,7 +187,7 @@ public class OntologyCreator {
         SimpleIRIMapper mapper = new SimpleIRIMapper(this.ontologyIRI,
                 this.documentIRI);
         manager.addIRIMapper(mapper);
-        PrefixManager pm = new DefaultPrefixManager(ontologyIRI.toString());
+        // PrefixManager pm = new DefaultPrefixManager(ontologyIRI.toString());
 
         /* write rules */
         OWLClassExpression firstRuleSet = null;
@@ -275,9 +275,9 @@ public class OntologyCreator {
         }
         manager.saveOntology(ontology);
     }
-
-    public void writeAll(//LinkedHashSet<OntologyClass> classes,
-            LinkedHashSet<Individual> individuals) //, OWLmap rulesMap)
+    //LinkedHashSet<OntologyClass> classes, OWLmap rulesMap)
+    public void writeAll(
+            LinkedHashSet<Individual> individuals) 
                     throws OWLOntologyCreationException,
                     OWLOntologyStorageException, SQLException {
 
@@ -500,7 +500,7 @@ public class OntologyCreator {
     public void convertDB()
             throws NumberFormatException, IOException, SQLException {
         LinkedHashSet<Individual> individuals;
-        LinkedHashSet<OntologyClass> classes;
+        //LinkedHashSet<OntologyClass> classes;
         String ontoFolder = null;
         if (RLPUtils.isLinux()) {
             ontoFolder = "/home/niklasmoran/ontologies/";
@@ -512,13 +512,13 @@ public class OntologyCreator {
         CSVReader reader = null;
         
         try {
-            
-            individuals = createIndividualsFromDB("1000"); // tableName);
             //this.OWLmap rulesMap = CSVRules();
+            CSVRulesToSQL();
             this.owlRulesMap = CSVRules();
+            individuals = createIndividualsFromDB("1000"); // tableName);
             //addEUNISClasses();
             writeAll(individuals);// rulesMap);
-            this.owlRulesMap = null;
+            // this.owlRulesMap = null;
         } catch (NullPointerException mye) {
             throw new NullPointerException(mye.getMessage());
         } catch (OWLOntologyStorageException e2) {
@@ -526,17 +526,17 @@ public class OntologyCreator {
         } catch (OWLOntologyCreationException e) {
             throw new RuntimeException(e.getMessage(), e);
         } finally {
-            /*
             if (reader !=null){
                 reader.close();
                 reader = null;
             }
-            */
             System.out.println("leaving convertDB");
-            // individuals = null;
+            individuals = null;
         }
         // return this.owlOut; //owlFile;
     }
+
+
     public OWLmap CSVRulesConverter() throws OWLOntologyCreationException,
     NumberFormatException, IOException, OWLOntologyStorageException {
         CSVReader reader = null;
@@ -679,6 +679,82 @@ public class OntologyCreator {
         return owlRulesMap; // classesExpressions;
     }
 
+    public void CSVRulesToSQL() throws IOException{
+        /* loop over files */
+        ArrayList classList = null;
+        CSVReader reader = null;
+        for (File csvFile : this.ruleDir.listFiles()) {
+            Map<String, ArrayList<String>> sqlMap = new java.util.HashMap<String, ArrayList<String>>();
+            String fileNameNoExt = FilenameUtils
+                    .removeExtension(csvFile.getName());
+            System.out.println("loading rule: " + fileNameNoExt);
+            try {
+                classList = RLPUtils.getDistinctValuesFromTbl(this.tableName,
+                        fileNameNoExt);
+            } catch (SQLException e1) {
+                e1.printStackTrace();
+            }
+            reader = new CSVReader(new FileReader(csvFile));
+            String[] nextLine;
+            /* write rules in SQL */
+            ArrayList<String> ruleSet = new ArrayList<String>();
+            ArrayList<String> rule = new ArrayList<String>();
+            while ((nextLine = reader.readNext()) != null) {
+                String parameter = nextLine[0]; 
+                if (parameter.contains(" ")) {
+                    parameter = parameter.replace(" ", "_");
+                }
+                if (classList.contains(parameter)) {
+                    /* add collected rules to class and clear rulesList */
+                    try {
+                        /* fileNameNoExt is the class Names so has_wetness */ 
+                        rule.addAll(ruleSet);
+                        ruleSet.clear();
+                        if (sqlMap.get(parameter) == null) {
+                            //ArrayList<String> myRules = new ArrayList<String>();
+                            //myRules.add();
+                            sqlMap.put(parameter, rule);
+                            continue;
+                        } else {
+                            /*
+                             * already seen this class! --update by or'ing the
+                             * rules!
+                             */
+                            sqlMap.get(parameter).addAll(rule); }
+                    } catch (NullPointerException e) {
+                        e.printStackTrace();
+                    } catch (ArrayIndexOutOfBoundsException e) {
+                        e.printStackTrace();
+                    }
+                }
+                /* gather rules */
+                try {
+                    String direction = nextLine[1];
+                    String threshold = nextLine[2];
+                    System.out.println(parameter + " direction: " + direction
+                    + " threshold: " + threshold);
+                    ruleSet.add(direction + threshold);
+                } catch (NullPointerException e) {
+                    e.printStackTrace();
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    e.printStackTrace();
+                }
+            }
+            System.out.println("***** ALL DONE ****");
+            Iterator it = sqlMap.entrySet().iterator();
+            while (it.hasNext()){
+                Map.Entry pair = (Map.Entry) it.next();
+                String currCls = (String) pair.getKey();
+                ArrayList<String> currRuleset = (ArrayList<String>) pair
+                        .getValue();
+                System.out.println("class: " + currCls + " size: " + currRuleset.size());
+                for (int i = 0; i < currRuleset.size(); i++) {
+                    System.out.println("curr: " + currRuleset.get(i));
+                }
+            }
+        }
+    }
+
     public OWLmap CSVRules() throws OWLOntologyCreationException,
     NumberFormatException, IOException, OWLOntologyStorageException {
         CSVReader reader = null;
@@ -711,7 +787,8 @@ public class OntologyCreator {
             Set<OWLClassExpression> ruleSet = new HashSet<OWLClassExpression>();
             Set<OWLClassExpression> objSet = new HashSet<OWLClassExpression>();
             while ((nextLine = reader.readNext()) != null) {
-                String parameter = nextLine[0]; /* why has_? */
+                /* has_${parameter} */
+                String parameter = nextLine[0]; 
                 if (parameter.contains(" ")) {
                     parameter = parameter.replace(" ", "_");
                 }
@@ -746,7 +823,7 @@ public class OntologyCreator {
                         .applyChange(new AddAxiom(this.ontology, parameterAx));
                         this.manager.applyChange(new AddAxiom(this.ontology, objUnionSub));
                         this.parameterClasses.add(parameter);
-                        System.out.println("parameter: " + fileNameNoExt+
+                        System.out.println("class: " + fileNameNoExt+
                                 " value: " + parameter);
                         OWLmap.owlRuleSet rule = new OWLmap.owlRuleSet(
                                 parameter); // ,
@@ -833,8 +910,12 @@ public class OntologyCreator {
         return owlRulesMap;
     }
 
+    private LinkedHashSet<Individual> createIndividualsFromDB()
+                          throws SQLException {
+        return createIndividualsFromDB("-1"); 
+    }
     private LinkedHashSet<Individual> createIndividualsFromDB(String limit)
-            throws SQLException { // String
+                          throws SQLException {
         /* Read from DB */
         System.out.println("getting individuals from DB!");
         Statement st = null;
@@ -846,8 +927,14 @@ public class OntologyCreator {
             individuals = new LinkedHashSet<Individual>(
                     getRowCount(this.tableName));
             System.out.println("tableName: " + this.tableName);
-            rs = st.executeQuery(
-                    "SELECT * FROM \"" + this.tableName + "\" LIMIT " + limit);
+            if (limit.equals("-1")){
+                rs = st.executeQuery(
+                        "SELECT * FROM \"" + this.tableName + "\"");
+            } else{
+                rs = st.executeQuery(
+                        "SELECT * FROM \"" + this.tableName + "\"" +
+                        " LIMIT " + limit);
+            }
             rsmd = rs.getMetaData();
             int colCount = rsmd.getColumnCount();
             if (rsmd == null || colCount == 0 || rs == null) {
@@ -862,18 +949,21 @@ public class OntologyCreator {
                 Individual individual = new Individual();
                 for (int i = 1; i <= colCount; i++) {
                     String colName = rsmd.getColumnName(i);
-                    if (colName.endsWith("id")) {
+                    if (colName.endsWith("id")){ 
+                            //this.owlRulesMap.get(colName) == null) {
+                        // skip ids and columns not in parameter
                         continue;
-                    } else if (colName.startsWith("natflo")
+                    } else if (rsmd.getColumnType(i) == java.sql.Types.VARCHAR){
+                        /* (colName.startsWith("natflo")
                             || colName.startsWith("eunis")
                             || colName.startsWith("eagle")) {
-                        // if (rsmd.getColumnType(i) == java.sql.Types.VARCHAR){
+                        */
                         String myValue = rs.getString(colName);
                         if (myValue == null) {
                             myValue = "";
                         }
                         stringValues.put("has_" + colName, myValue);
-                    } else if (rsmd.getColumnType(i) == java.sql.Types.DOUBLE) {
+                    } else if (rsmd.getColumnType(i) == java.sql.Types.DOUBLE){
                         values.put("has_" + colName, rs.getDouble(colName));
                     }
                 }
@@ -882,8 +972,6 @@ public class OntologyCreator {
                 individual.setValueString(stringValues);
                 // add to individuals
                 individuals.add(individual);
-                // System.out.println(individual.getDataPropertyNames() + " : "
-                // + individual.getValues());
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -891,6 +979,9 @@ public class OntologyCreator {
             if (st != null) {
                 st.close();
             }
+        }
+        if (individuals.isEmpty()){
+            System.out.println("individuals hash is empty!!");
         }
         return individuals;
     }
@@ -924,23 +1015,21 @@ public class OntologyCreator {
         String resultsTbl = null;
         System.out.println("Before try");
         PrintWriter pw = null;
-        String tableName = "test";
+        String tableName = "grasslands_test";
         String homeDir = System.getProperty("user.home");
         defaultDict<Integer, List<String>> dict = null;  new defaultDict<Integer, List<String>>(ArrayList.class);
         try {
-            mgr.createOntology(ontologyIRI);
-            onto = mgr.loadOntologyFromOntologyDocument(IRI.create(outFile));// ontologyIRI);
-            //mgr.saveOntology(onto, new OWLXMLDocumentFormat(), IRI.create(outFile.toURI()));
-            //OWLReasoner reasoner = new FaCTPlusPlusReasonerFactory().createNonBufferingReasoner(onto);
+            //mgr.createOntology(ontologyIRI);
+            onto = mgr.loadOntologyFromOntologyDocument(IRI.create(outFile));
             assert (onto != null);
             OWLReasoner reasoner = new FaCTPlusPlusReasonerFactory()
                     .createReasoner(onto);
             System.out.println("Is Consistent: " + reasoner.isConsistent());
             pw = new PrintWriter(new File(homeDir + "/test-rlp/create.sql"));
             System.out.println("reasoner about to load ontology");
-            // onto = mgr.loadOntologyFromOntologyDocument(fileName);
+            onto = mgr.loadOntologyFromOntologyDocument(outFile);
             System.out.println(reasoner.getReasonerVersion());
-            HashMap<String, ArrayList<String>> classesHash = new HashMap<String, ArrayList<String>>();
+            System.out.println("rulesList: " + this.rulesList);
             for (String parameter : this.rulesList) {
                 dict = new defaultDict<Integer, List<String>>(ArrayList.class); 
                 System.out.println("current parameter: " + parameter);
@@ -987,7 +1076,9 @@ public class OntologyCreator {
             e.printStackTrace();
         } finally {
             System.out.println("ALL DONE!");
-            pw.close();
+            if (pw != null){
+                pw.close();
+            }
         }
         return resultsTbl;
     }
@@ -1060,5 +1151,4 @@ public class OntologyCreator {
             }
         }
     }
-
 }
