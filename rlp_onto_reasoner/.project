@@ -30,7 +30,7 @@
 		<link>
 			<name>database</name>
 			<type>2</type>
-			<location>C:/Users/Moran/git/rlp_simon/dataPreprocessingTool/database</location>
+            <location>~/git/rlp_simon/dataPreprocessingTool/database</location>
 		</link>
 	</linkedResources>
 </projectDescription>

@@ -42,7 +42,7 @@ public class RLPUtils {
 							 			 + " FROM " + tableName
 							 			 + " WHERE " + colName + " != '' AND "
 							 			 + colName + " IS NOT NULL";
-			//System.out.println(myQuery);
+			System.out.println(myQuery);
 			ResultSet rs = st.executeQuery(myQuery);
 			rsmd = rs.getMetaData();
 			int colCount = rsmd.getColumnCount();

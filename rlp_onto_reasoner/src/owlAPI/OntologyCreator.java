@@ -31,23 +31,19 @@ import org.apache.commons.io.FilenameUtils;
 import org.semanticweb.owlapi.apibinding.OWLManager;
 import org.semanticweb.owlapi.formats.OWLXMLDocumentFormat;
 import org.semanticweb.owlapi.model.AddAxiom;
-//import org.semanticweb.owlapi.formats.OWLXMLDocumentFormat;
 import org.semanticweb.owlapi.model.IRI;
 import org.semanticweb.owlapi.model.OWLAnnotation;
 import org.semanticweb.owlapi.model.OWLAxiom;
 import org.semanticweb.owlapi.model.OWLClass;
 import org.semanticweb.owlapi.model.OWLClassExpression;
 import org.semanticweb.owlapi.model.OWLDataFactory;
-//import org.semanticweb.owlapi.model.OWLDataOneOf;
 import org.semanticweb.owlapi.model.OWLDataProperty;
 import org.semanticweb.owlapi.model.OWLDataPropertyAssertionAxiom;
-//import org.semanticweb.owlapi.model.OWLDataPropertyExpression;
 import org.semanticweb.owlapi.model.OWLDatatype;
 import org.semanticweb.owlapi.model.OWLDatatypeRestriction;
 import org.semanticweb.owlapi.model.OWLLiteral;
 import org.semanticweb.owlapi.model.OWLNamedIndividual;
 import org.semanticweb.owlapi.model.OWLObjectProperty;
-//import org.semanticweb.owlapi.model.OWLObjectPropertyAssertionAxiom;
 import org.semanticweb.owlapi.model.OWLObjectUnionOf;
 import org.semanticweb.owlapi.model.OWLOntology;
 import org.semanticweb.owlapi.model.OWLOntologyCreationException;
@@ -98,7 +94,7 @@ public class OntologyCreator {
 
     public OntologyCreator(String url, String tableName, File ruleDir,
             int numRules, String algorithm, ArrayList<String> rulesList,
-            File owlOut, String csvClasses) throws SQLException {
+            File owlOut) throws SQLException {
         this.dbConn = DriverManager.getConnection(url);
         this.tableName = tableName;
         this.ruleDir = ruleDir;
@@ -106,7 +102,6 @@ public class OntologyCreator {
         this.algorithm = algorithm;
         this.rulesList = rulesList;
         this.owlOut = owlOut;
-        this.classesFile = csvClasses;
     }
 
     public void loadOntology(String ontologyIRIasString, String version,
@@ -132,7 +127,6 @@ public class OntologyCreator {
         } catch (OWLOntologyCreationException e) {
             e.printStackTrace();
         } catch (OWLOntologyStorageException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
@@ -498,9 +492,10 @@ public class OntologyCreator {
     }
 
     public void convertDB()
-            throws NumberFormatException, IOException, SQLException {
+            throws NumberFormatException, IOException, SQLException,
+            OWLOntologyCreationException, 
+            OWLOntologyStorageException {
         LinkedHashSet<Individual> individuals;
-        //LinkedHashSet<OntologyClass> classes;
         String ontoFolder = null;
         if (RLPUtils.isLinux()) {
             ontoFolder = "/home/niklasmoran/ontologies/";
@@ -514,19 +509,14 @@ public class OntologyCreator {
         try {
             //this.OWLmap rulesMap = CSVRules();
             CSVRulesToSQL();
-            this.owlRulesMap = CSVRules();
-            individuals = createIndividualsFromDB("1000"); // tableName);
-            //addEUNISClasses();
-            writeAll(individuals);// rulesMap);
-            // this.owlRulesMap = null;
+            //this.owlRulesMap = CSVRules();
+            //createIndivFromDB(); // tableName);
+            //writeAll(individuals);// rulesMap);
+            //this.owlRulesMap = null;
         } catch (NullPointerException mye) {
             throw new NullPointerException(mye.getMessage());
-        } catch (OWLOntologyStorageException e2) {
-            throw new RuntimeException(e2.getMessage(), e2);
-        } catch (OWLOntologyCreationException e) {
-            throw new RuntimeException(e.getMessage(), e);
         } finally {
-            if (reader !=null){
+            if (reader != null){
                 reader.close();
                 reader = null;
             }
@@ -683,10 +673,16 @@ public class OntologyCreator {
         /* loop over files */
         ArrayList classList = null;
         CSVReader reader = null;
-        for (File csvFile : this.ruleDir.listFiles()) {
+        File[] myfiles = this.ruleDir.listFiles();
+        if (myfiles.length == 0){
+           System.out.println("File list has no members!"); 
+           return;
+        }
+        for (File csvFile : myfiles)  {
             Map<String, ArrayList<String>> sqlMap = new java.util.HashMap<String, ArrayList<String>>();
             String fileNameNoExt = FilenameUtils
                     .removeExtension(csvFile.getName());
+            if (fileNameNoExt == null || fileNameNoExt == ""){ break;}
             System.out.println("loading rule: " + fileNameNoExt);
             try {
                 classList = RLPUtils.getDistinctValuesFromTbl(this.tableName,
@@ -721,6 +717,7 @@ public class OntologyCreator {
                              * rules!
                              */
                             sqlMap.get(parameter).addAll(rule); }
+                            rule.clear();
                     } catch (NullPointerException e) {
                         e.printStackTrace();
                     } catch (ArrayIndexOutOfBoundsException e) {
@@ -753,6 +750,7 @@ public class OntologyCreator {
                 }
             }
         }
+
     }
 
     public OWLmap CSVRules() throws OWLOntologyCreationException,
@@ -910,10 +908,81 @@ public class OntologyCreator {
         return owlRulesMap;
     }
 
-    private LinkedHashSet<Individual> createIndividualsFromDB()
-                          throws SQLException {
-        return createIndividualsFromDB("-1"); 
+    public void createIndivFromDB() throws SQLException, OWLOntologyCreationException{
+        System.out.println("getting individuals from DB!");
+        OWLOntologyManager manager = OWLManager.createOWLOntologyManager();
+        OWLOntology ontology = manager
+                .loadOntologyFromOntologyDocument(this.documentIRI);
+        OWLDataFactory factory = this.manager.getOWLDataFactory();
+        SimpleIRIMapper mapper = new SimpleIRIMapper(this.ontologyIRI,
+         this.documentIRI);
+        manager.addIRIMapper(mapper);
+        PrefixManager pm = new DefaultPrefixManager(ontologyIRI.toString());
+        Statement st = null;
+        ResultSet rs = null;
+        ResultSetMetaData rsmd = null;
+        try {
+            st = dbConn.createStatement();
+            System.out.println("tableName: " + this.tableName);
+            rs = st.executeQuery(
+                    "SELECT * FROM \"" + this.tableName + "\"");
+            rsmd = rs.getMetaData();
+            int colCount = rsmd.getColumnCount();
+            if (rsmd == null || colCount == 0 || rs == null) {
+                System.out.println("ERROR: too few columns!");
+            }
+            while (rs.next()) {
+                for (int i = 1; i <= colCount; i++) {
+                    String colName = rsmd.getColumnName(i);
+
+                OWLNamedIndividual obj = factory
+                        .getOWLNamedIndividual("#" + rs.getInt("id"), pm);
+
+                OWLDataProperty dataProp = factory
+                        .getOWLDataProperty("#" + "has_" + colName,  pm);
+                OWLDataPropertyAssertionAxiom dataPropertyAssertion = null;
+
+                if (colName.endsWith("id")){ 
+                    continue;
+                } else if (rsmd.getColumnType(i) == java.sql.Types.VARCHAR){
+
+                    String myValue = rs.getString(colName);
+                    if (myValue == null) { myValue = ""; }
+                    OWLDatatype stringDatatype = factory
+                            .getOWLDatatype(OWL2Datatype.XSD_STRING.getIRI());
+
+                    OWLLiteral literal = factory.getOWLLiteral(
+                            myValue, stringDatatype);
+
+                    dataPropertyAssertion = factory
+                            .getOWLDataPropertyAssertionAxiom(dataProp, obj,
+                                    literal);
+                } else if (rsmd.getColumnType(i) == java.sql.Types.DOUBLE){
+                    Double myvalue = rs.getDouble(colName);
+                    OWLDatatype doubleDatatype = factory
+                            .getOWLDatatype(OWL2Datatype.XSD_DOUBLE.getIRI());
+
+                    OWLLiteral literal = factory.getOWLLiteral(
+                            myvalue.toString(), doubleDatatype);
+
+                    dataPropertyAssertion = factory
+                            .getOWLDataPropertyAssertionAxiom(dataProp, obj,
+                                    literal);
+                }
+                /* apply individual */
+                this.manager.applyChange(
+                        new AddAxiom(ontology, dataPropertyAssertion));
+                } 
+          }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            if (st != null) {
+                st.close();
+            }
+        }
     }
+    
     private LinkedHashSet<Individual> createIndividualsFromDB(String limit)
                           throws SQLException {
         /* Read from DB */
@@ -1070,7 +1139,6 @@ public class OntologyCreator {
                 dict = null;
             }
         } catch (FileNotFoundException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         } catch (NumberFormatException e){
             e.printStackTrace();

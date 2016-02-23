@@ -13,6 +13,8 @@ import org.semanticweb.owlapi.model.OWLOntologyStorageException;
 
 import owlAPI.OntologyCreator;
 import rlpUtils.RLPUtils;
+import java.util.*;
+import java.sql.Connection;
 
 public class Main {
 
@@ -28,7 +30,10 @@ public class Main {
 		}
 		return rulesList;
 	}
-	public static void main(String[] args) throws SQLException, IOException, OWLOntologyCreationException{
+	public static void main(String[] args) throws SQLException, IOException,
+                                                OWLOntologyCreationException, 
+                                                NumberFormatException, 
+                                                OWLOntologyStorageException{
 		RLPUtils.getOsName();
 		String tableName = "grasslands_test";
 		String homeDir = System.getProperty("user.home");
@@ -39,11 +44,11 @@ public class Main {
 		String algorithm = "dt";
 		File outFile = new File(homeDir+"/test-rlp/grassland_dt.owl");
 		//AddIndividuals 
-		String csvClasses = homeDir+"/git/owlontoreasoner/rlp_onto_reasoner/data/rlp_eunis_key.csv";
+		//String csvClasses = homeDir+"/git/owlontoreasoner/rlp_onto_reasoner/data/rlp_eunis_key.csv";
 		OntologyCreator ontCreate = new OntologyCreator(
 		"jdbc:postgresql://localhost:5432/rlp_spatial?user=postgres&password=BobtheBuilder",
 		tableName, rulesDir, numRules, algorithm, rulesList,
-		outFile, csvClasses);
+		outFile); // csvClasses);
 		String ontologyIRI = "http://www.user.tu-berlin.de/niklasmoran/" + outFile.getName().trim();
 		try {
 			ontCreate.createOntology(ontologyIRI, "version_1_0", outFile);
@@ -54,6 +59,32 @@ public class Main {
 			e.printStackTrace();
 		 }
 		ontCreate.convertDB(); 
-		// String returnTbl = ontCreate.classifyOWL(outFile); //outFile, tableName, resultsTbl, parameter);
+		String returnTbl = ontCreate.classifyOWL(outFile); //outFile, tableName, resultsTbl, parameter);
+		//String returnTbl = ontCreate.classifyOWL(outFile); //outFile, tableName, resultsTbl, parameter);
+		/*
+		System.out.println("successfully created");
+        for (String parameter : rulesList){
+            System.out.println("results located in: " + returnTbl);
+            File file = new File(".");
+            String currLocation = file.getCanonicalPath();
+            String workingDirectory = null;
+            String OS = (System.getProperty("os.name")).toUpperCase();
+            //to determine what the workingDirectory is.
+            //if it is some version of Windows
+            String pythonLoc = null;
+            if (OS.contains("WIN")){
+                workingDirectory = System.getenv("AppData");
+                pythonLoc = "C:/Python27_64/WinPython-64bit-2.7.9.3/python-2.7.9.amd64/python.exe";
+            } //Otherwise, we assume Linux or Mac
+            else {
+                    workingDirectory = System.getProperty("user.home");
+                    pythonLoc = "python2";
+                }
+                System.out.println("Executing: " + 
+                currLocation + "/sql_utils/confusion_matrix.py");
+                
+                Process process = new ProcessBuilder(pythonLoc,
+                            currLocation + "/sql_utils/confusion_matrix.py ", returnTbl).start();
+        }*/
 	}
 }
