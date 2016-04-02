@@ -31,17 +31,17 @@ public class RLPUtils {
 
 	public static ArrayList<String> getDistinctValuesFromTbl(String tableName, String colName) throws SQLException{
 		ArrayList<String> columnValues = null; 
-		String url = "jdbc:postgresql://localhost:5432/rlp_spatial?user=postgres&password=BobtheBuilder";
+		String url = "jdbc:postgresql://localhost:5432/rlp_saarburg?user=postgres&password=BobtheBuilder";
 		Statement st = null;
 		Connection db = null;
 		ResultSetMetaData rsmd = null;
+		if (colName == "" || colName == null) return null; 
 		try {
 			db = DriverManager.getConnection(url);
 			st = db.createStatement();
 			String myQuery = "SELECT DISTINCT( " + colName + ")"
 							 			 + " FROM " + tableName
-							 			 + " WHERE " + colName + " != '' AND "
-							 			 + colName + " IS NOT NULL";
+							 			 + " WHERE " + colName + " IS NOT NULL";
 			System.out.println(myQuery);
 			ResultSet rs = st.executeQuery(myQuery);
 			rsmd = rs.getMetaData();
