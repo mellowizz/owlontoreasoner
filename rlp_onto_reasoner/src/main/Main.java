@@ -36,14 +36,14 @@ public class Main {
     }
     public static void main(String[] args) throws SQLException, IOException, OWLOntologyCreationException{
         RLPUtils.getOsName();
-        String tableName = "test_mnz_grasslands";
+        String tableName = "test_may_grasslands";
         String homeDir = System.getProperty("user.home");
         File rulesDir = new File("/home/niklasmoran/git/data_mining_module/rules/");
         ArrayList<String> rulesList = getRulesList(rulesDir);
         System.out.println("Rules: " + rulesList.toString());
         int numRules = 20;
         String algorithm = "dt";
-        File outFile = new File(homeDir+"/test-rlp/grassland_dt.owl");
+        File outFile = new File(homeDir+"/test-rlp/grassland_may.owl");
         //AddIndividuals 
         String csvClasses = homeDir+"/git/owlontoreasoner/rlp_onto_reasoner/data/rlp_eunis_key.csv";
         OntologyCreator ontCreate = new OntologyCreator(

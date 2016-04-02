@@ -215,7 +215,7 @@ public class OntologyCreator {
     }
 
     public void writeAll(LinkedHashSet<OntologyClass> classes,
-            LinkedHashSet<Individual> individuals, OWLmap rules)
+            LinkedHashSet<Individual> individuals) //, OWLmap rules)
                     throws OWLOntologyCreationException,
                     OWLOntologyStorageException, SQLException {
 
@@ -253,7 +253,7 @@ public class OntologyCreator {
         OWLClassExpression firstRuleSet = null;
         OWLClass owlCls = null;
         OWLObjectUnionOf totalunion = null;
-        Iterator it = rules.map.entrySet().iterator();
+        Iterator it = this.owlRulesMap.map.entrySet().iterator();
         Set<OWLClassExpression> unionSet = new HashSet<OWLClassExpression>();
         while (it.hasNext()) {
             Map.Entry pair = (Map.Entry) it.next();
@@ -514,11 +514,12 @@ public class OntologyCreator {
         try {
             //this.OWLmap rulesMap = CSVRules();
             //CSVRulesToSQL();
-            this.owlRulesMap = CSVRules();
             individuals = createIndividualsFromDB("-1"); // tableName);
+            this.owlRulesMap = CSVRules();
+            LinkedHashSet<OntologyClass> eunis = createClassesfromDB();
             //addEUNISClasses();
-            writeAll(individuals);// rulesMap);
-            // this.owlRulesMap = null;
+            writeAll(eunis, individuals);// rulesMap);
+            this.owlRulesMap = null;
         } catch (NullPointerException mye) {
             throw new NullPointerException(mye.getMessage());
         } catch (OWLOntologyStorageException e2) {
@@ -772,7 +773,7 @@ public class OntologyCreator {
         for (File csvFile : this.ruleDir.listFiles()) {
             String fileNameNoExt = FilenameUtils
                     .removeExtension(csvFile.getName());
-            if (fileNameNoExt.startsWith("") || fileNameNoExt == null) break;
+            if (fileNameNoExt.isEmpty() || fileNameNoExt == null) continue;
             try {
                 classList = RLPUtils.getDistinctValuesFromTbl(this.tableName,
                         fileNameNoExt);
@@ -795,7 +796,7 @@ public class OntologyCreator {
                 if (parameter.contains(" ")) {
                     parameter = parameter.replace(" ", "_");
                 }
-                if (classList.contains(parameter)) {
+                if (classList.contains(parameter) || nextLine.length == 1) {
                     /* add collected rules to class and clear rulesList */
                     
                     try {
@@ -1017,7 +1018,7 @@ public class OntologyCreator {
         String resultsTbl = null;
         System.out.println("Before try");
         PrintWriter pw = null;
-        String tableName = "grasslands_test";
+        String tableName = "test_all";
         String homeDir = System.getProperty("user.home");
         defaultDict<Integer, List<String>> dict = null;  new defaultDict<Integer, List<String>>(ArrayList.class);
         try {
@@ -1030,6 +1031,7 @@ public class OntologyCreator {
             // System.out.println("Is Consistent: " + reasoner.isConsistent());
             pw = new PrintWriter(new File(homeDir + "/test-rlp/create.sql"));
             System.out.println("reasoner about to load ontology");
+            //onto = mgr.loadOntologyFromOntologyDocument(outFile);
             System.out.println(reasoner.getReasonerVersion());
             System.out.println("rulesList: " + this.rulesList);
             for (String parameter : this.rulesList) {
@@ -1039,14 +1041,14 @@ public class OntologyCreator {
                 pw.println("COPY " + resultsTbl + " FROM stdin USING DELIMITERS '|';");
                 for (OWLClass c : onto.getClassesInSignature()) {
                     String currClass = c.getIRI().getShortForm();
-                    if (currClass.endsWith("false")) {
-                        currClass = "0";
-                    } else if (currClass.endsWith("true")) {
-                        currClass = "1";
-                    }
                     if (RLPUtils.getDistinctValuesFromTbl(this.tableName, parameter).contains(currClass)){
                     //if ( this.parameterClasses.contains(currClass)){
-                        NodeSet<OWLNamedIndividual> instances = reasoner.getInstances(c, false);
+                    	if (currClass.endsWith("false")) {
+                            currClass = "0";
+                        } else if (currClass.endsWith("true")) {
+                            currClass = "1";
+                        }
+                    	NodeSet<OWLNamedIndividual> instances = reasoner.getInstances(c, false);
                         int numIndividuals = 0;
                         if (instances.isEmpty()){
                             System.out.println("class: " + " is empty!!");
