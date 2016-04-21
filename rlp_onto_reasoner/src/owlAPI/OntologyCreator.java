@@ -551,8 +551,6 @@ public class OntologyCreator {
                     "csv", "CSV");
             if (extensionFilter.accept(csvFile)) {
                 reader = new CSVReader(new FileReader(csvFile));
-                // List<String> classNames = Arrays.asList("aquatic", "dry",
-                // "mesic", "very_wet");
                 String fileNameNoExt = FilenameUtils
                         .removeExtension(csvFile.getName());
                 String[] classNames = fileNameNoExt.split("-");
@@ -769,10 +767,10 @@ public class OntologyCreator {
         ArrayList classList = null;
         OWLDatatype booleanDataType = factory.getBooleanOWLDatatype();
         OWLClass paramValue = null;
-        System.out.println(this.ruleDir.listFiles());
         for (File csvFile : this.ruleDir.listFiles()) {
             String fileNameNoExt = FilenameUtils
                     .removeExtension(csvFile.getName());
+            System.out.println("current rule: " + fileNameNoExt);
             if (fileNameNoExt.isEmpty() || fileNameNoExt == null) continue;
             try {
                 classList = RLPUtils.getDistinctValuesFromTbl(this.tableName,
@@ -954,14 +952,10 @@ public class OntologyCreator {
                 for (int i = 1; i <= colCount; i++) {
                     String colName = rsmd.getColumnName(i);
                     if (colName.endsWith("id")){ 
-                            //this.owlRulesMap.get(colName) == null) {
+                        //this.owlRulesMap.get(colName) == null);
                         // skip ids and columns not in parameter
                         continue;
                     } else if (rsmd.getColumnType(i) == java.sql.Types.VARCHAR){
-                        /* (colName.startsWith("natflo")
-                            || colName.startsWith("eunis")
-                            || colName.startsWith("eagle")) {
-                        */
                         String myValue = rs.getString(colName);
                         if (myValue == null) {
                             myValue = "";
@@ -1018,7 +1012,7 @@ public class OntologyCreator {
         String resultsTbl = null;
         System.out.println("Before try");
         PrintWriter pw = null;
-        String tableName = "test_all";
+        String tableName = "test_sburg_grasslands";
         String homeDir = System.getProperty("user.home");
         defaultDict<Integer, List<String>> dict = null;  new defaultDict<Integer, List<String>>(ArrayList.class);
         try {
@@ -1037,17 +1031,17 @@ public class OntologyCreator {
             for (String parameter : this.rulesList) {
                 dict = new defaultDict<Integer, List<String>>(ArrayList.class); 
                 System.out.println("current parameter: " + parameter);
-                resultsTbl = "results_" + parameter;
+                resultsTbl = "results_" + parameter ;
                 pw.println("COPY " + resultsTbl + " FROM stdin USING DELIMITERS '|';");
                 for (OWLClass c : onto.getClassesInSignature()) {
                     String currClass = c.getIRI().getShortForm();
+                    if (currClass.endsWith("false")) {
+                        currClass = "0";
+                    } else if (currClass.endsWith("true")) {
+                        currClass = "1";
+                    }
                     if (RLPUtils.getDistinctValuesFromTbl(this.tableName, parameter).contains(currClass)){
                     //if ( this.parameterClasses.contains(currClass)){
-                    	if (currClass.endsWith("false")) {
-                            currClass = "0";
-                        } else if (currClass.endsWith("true")) {
-                            currClass = "1";
-                        }
                     	NodeSet<OWLNamedIndividual> instances = reasoner.getInstances(c, false);
                         int numIndividuals = 0;
                         if (instances.isEmpty()){
@@ -1062,9 +1056,10 @@ public class OntologyCreator {
                             int currId = Integer.parseInt(individual.substring(individual.lastIndexOf("#")+1));
                             dict.get(currId).add(currClass);
                             pw.println(currId + "|"+ currClass);
-                            System.out.println(currId + ", " + currClass);
+                            // System.out.println(currId + ", " + currClass);
                         }
-                    } else {
+                    }else {
+                        System.out.println("class: " + currClass + " not in: " + tableName);
                         continue;
                     }
                 /* write results to DB */
@@ -1103,11 +1098,11 @@ public class OntologyCreator {
             con = DriverManager.getConnection(url);
             con.setAutoCommit(false);
             st = con.createStatement();
-            // String validationTable = tableName + "_results";
-            System.out.println("going to create tableName: " + tableName
+            System.out.println("going to create tableName: " + tableName + "_sburg"
                     + " from validation table: " + validationTable);
-            st.execute("drop TABLE if exists " + tableName + ";");
-            String createSql = "CREATE TABLE " + tableName + "( id integer, \""
+            /* reduced */
+            st.execute("drop TABLE if exists " + tableName + "_sburg" + ";");
+            String createSql = "CREATE TABLE " + tableName +"_sburg" + "( id integer, \""
                     + parameter
                     + "\" VARCHAR(25), classified VARCHAR(25), PRIMARY KEY(id));";
             System.out.println(createSql);
@@ -1123,11 +1118,12 @@ public class OntologyCreator {
                 Integer key = ee.getKey();
                 List<String> values = ee.getValue();
                 String new_value = Joiner.on("_").skipNulls().join(values);
-                String query = "insert into " + tableName + "(id, \""
+                /*reduced */
+                String query = "insert into " + tableName + "_sburg" + "(id, \""
                         + parameter + "\", classified) values(" + key + ",'"
                         + validClasses.get(key) + "','" + new_value + "');";
 
-                System.out.println(query);
+                //System.out.println(query);
                 st.addBatch(query);
             }
             st.executeBatch();
